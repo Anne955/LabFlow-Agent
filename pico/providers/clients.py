@@ -6,9 +6,13 @@ import urllib.request
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
-
-class ModelProviderError(RuntimeError):
-    pass
+from ..errors import (
+    ModelProviderError,
+    ProviderAuthError,  # noqa: F401  re-exported for provider HTTP-status mapping (Phase 2 Task 2)
+    ProviderConnectionError,  # noqa: F401  re-exported for provider HTTP-status mapping (Phase 2 Task 2)
+    ProviderRateLimitError,  # noqa: F401  re-exported for provider HTTP-status mapping (Phase 2 Task 2)
+    ProviderResponseError,  # noqa: F401  re-exported for provider HTTP-status mapping (Phase 2 Task 2)
+)
 
 
 @dataclass

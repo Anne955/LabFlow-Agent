@@ -21,3 +21,23 @@ class ToolExecutionError(PicoError):
     def __init__(self, message: str, error_code: str = "tool_error") -> None:
         super().__init__(message)
         self.error_code = error_code
+
+
+class ModelProviderError(PicoError):
+    """Base class for all LLM provider failures."""
+
+
+class ProviderConnectionError(ModelProviderError):
+    """Transient network/timeout error — safe to retry."""
+
+
+class ProviderRateLimitError(ModelProviderError):
+    """HTTP 429 — safe to retry with backoff."""
+
+
+class ProviderAuthError(ModelProviderError):
+    """HTTP 401/403 — terminal; do not retry."""
+
+
+class ProviderResponseError(ModelProviderError):
+    """Other non-retryable provider error (4xx except 429, malformed response)."""
