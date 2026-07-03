@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
+from .errors import SafetyViolationError, ToolExecutionError
 from .tool_context import ToolContext
 from .tools import ToolResult, ToolSpec, shell_command_signature, validate_tool_args
 
@@ -44,9 +45,14 @@ class ToolExecutor:
         self.last_signature = signature
         try:
             return spec.runner(self.context, args)
+        except SafetyViolationError:
+            raise
+        except ToolExecutionError as exc:
+            return ToolResult(False, str(exc), error_code=exc.error_code)
         except ValueError as exc:
             return ToolResult(False, str(exc), error_code="path_escape")
-        except Exception as exc:  # noqa: BLE001 - tool boundary must convert failures to observations
+        except Exception as exc:  # noqa: BLE001 - tool boundary isolates unexpected failures
+            self.events.append({"level": "warning", "name": name, "error": f"unexpected: {exc!r}"})
             return ToolResult(False, f"tool failed: {exc}", error_code="tool_exception")
 
     def _approval_error(self, spec: ToolSpec, args: dict[str, Any]) -> ToolResult | None:
