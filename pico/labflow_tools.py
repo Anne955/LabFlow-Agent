@@ -12,6 +12,7 @@ from collections import Counter
 from pathlib import Path
 
 from .safety.guard import (
+    assert_raw_data_readonly,
     resolve_output_path,
     resolve_preprocessed_path,
     resolve_registered_script,
@@ -186,6 +187,7 @@ def tool_quality_check(ctx: ToolContext, args: dict[str, object]) -> ToolResult:
             findings.append(_finding(ctx, batch_id, sample_id, spectra_dir / f"{sample_id}_*.csv", "missing_spectra_file", "critical", "metadata sample has no corresponding spectra CSV"))
 
     qc_path = resolve_output_path(ctx.root, batch_id, "qc_summary.csv")
+    assert_raw_data_readonly(ctx.root, qc_path)
     _write_qc_summary(qc_path, findings)
     abnormal_samples = sorted({item["sample_id"] for item in findings if item["sample_id"]})
     by_check = Counter(item["check"] for item in findings)
@@ -227,6 +229,7 @@ def _run_single_preprocess(ctx: ToolContext, args: dict[str, object], batch_id: 
     raw_output = str(args.get("output_path") or f"{input_path.stem}_normalized.csv")
     output_name = Path(raw_output).name if Path(raw_output).is_absolute() else raw_output
     output_path = resolve_preprocessed_path(ctx.root, batch_id, output_name)
+    assert_raw_data_readonly(ctx.root, output_path)
     row = _run_preprocess_one(ctx, script_path, script_name, input_path, output_path)
     summary_path = resolve_output_path(ctx.root, batch_id, "preprocess_summary.csv")
     _write_preprocess_summary(summary_path, batch_id, [row])
@@ -271,6 +274,7 @@ def _run_batch_preprocess(ctx: ToolContext, args: dict[str, object], batch_id: s
             continue
         output_name = f"{input_path.stem}{output_suffix}"
         output_path = resolve_preprocessed_path(ctx.root, batch_id, output_name)
+        assert_raw_data_readonly(ctx.root, output_path)
         rows.append(_run_preprocess_one(ctx, script_path, script_name, input_path, output_path))
     summary_path = resolve_output_path(ctx.root, batch_id, "preprocess_summary.csv")
     _write_preprocess_summary(summary_path, batch_id, rows)
@@ -403,6 +407,8 @@ def tool_generate_report(ctx: ToolContext, args: dict[str, object]) -> ToolResul
     preprocess_skipped = sum(1 for row in preprocess_rows if row.get("status") == "skipped")
     preprocessed = sorted((output_dir / "preprocessed").glob("*.csv")) if (output_dir / "preprocessed").is_dir() else []
     report_path = resolve_report_path(ctx.root, batch_id)
+    assert_raw_data_readonly(ctx.root, report_path)
+    assert_raw_data_readonly(ctx.root, qc_path)
     report_path.parent.mkdir(parents=True, exist_ok=True)
     sections = [
         f"# LabFlow QC Report: {batch_id}",
@@ -459,6 +465,7 @@ def tool_generate_report(ctx: ToolContext, args: dict[str, object]) -> ToolResul
 def tool_export_workflow_log(ctx: ToolContext, args: dict[str, object]) -> ToolResult:
     batch_id = sanitize_batch_id(str(args["batch_id"]))
     trace_path = resolve_trace_path(ctx.root, batch_id)
+    assert_raw_data_readonly(ctx.root, trace_path)
     return ToolResult(
         True,
         f"workflow log export requested: {relpath(ctx, trace_path)}",
