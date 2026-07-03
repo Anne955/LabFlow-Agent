@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from ..errors import SafetyViolationError
+
 REGISTERED_SCRIPTS = {"normalize_csv.py"}
 SAFE_BATCH_ID = re.compile(r"^[A-Za-z0-9_-]+$")
 
@@ -30,7 +32,7 @@ def resolve_workspace_path(root: Path, raw_path: str) -> Path:
 def assert_raw_data_readonly(root: Path, path: Path) -> None:
     rel = path.resolve().relative_to(root.resolve()).parts
     if len(rel) >= 2 and rel[0] == "data" and (rel[1] == "raw" or rel[1].startswith("batch_")):
-        raise ValueError(f"raw data path is read-only: {path}")
+        raise SafetyViolationError(f"raw data path is read-only: {path}")
 
 
 def resolve_output_path(root: Path, batch_id: str, relative_name: str) -> Path:
@@ -51,7 +53,9 @@ def resolve_preprocessed_path(root: Path, batch_id: str, relative_name: str) -> 
     try:
         candidate.relative_to(base)
     except ValueError as exc:
-        raise ValueError(f"preprocessed path escapes outputs/{safe_batch}/preprocessed: {relative_name}") from exc
+        raise ValueError(
+            f"preprocessed path escapes outputs/{safe_batch}/preprocessed: {relative_name}"
+        ) from exc
     return candidate
 
 
