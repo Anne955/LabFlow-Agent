@@ -1,0 +1,22 @@
+sample_id,file_path,output_path,status,error_message,script_name,duration_seconds
+badname,data/batch_demo_004/spectra/badname.csv,.,skipped,critical QC finding,normalize_csv.py,0.000000
+sample_001,data/batch_demo_004/spectra/sample_001_raman.csv,outputs/batch_demo_004/preprocessed/sample_001_raman_normalized.csv,ok,,normalize_csv.py,0.174725
+sample_002,data/batch_demo_004/spectra/sample_002_raman.csv,outputs/batch_demo_004/preprocessed/sample_002_raman_normalized.csv,ok,,normalize_csv.py,0.137483
+sample_003,data/batch_demo_004/spectra/sample_003_raman.csv,outputs/batch_demo_004/preprocessed/sample_003_raman_normalized.csv,ok,,normalize_csv.py,0.131594
+sample_004,data/batch_demo_004/spectra/sample_004_raman.csv,.,skipped,critical QC finding,normalize_csv.py,0.000000
+sample_005,data/batch_demo_004/spectra/sample_005_raman.csv,outputs/batch_demo_004/preprocessed/sample_005_raman_normalized.csv,ok,,normalize_csv.py,0.141994
+sample_007,data/batch_demo_004/spectra/sample_007_raman.csv,.,skipped,critical QC finding,normalize_csv.py,0.000000
+sample_008,data/batch_demo_004/spectra/sample_008_raman.csv,.,skipped,critical QC finding,normalize_csv.py,0.000000
+sample_009,data/batch_demo_004/spectra/sample_009_raman.csv,.,skipped,critical QC finding,normalize_csv.py,0.000000
+sample_010,data/batch_demo_004/spectra/sample_010_raman.csv,outputs/batch_demo_004/preprocessed/sample_010_raman_normalized.csv,ok,,normalize_csv.py,0.143153
+sample_011,data/batch_demo_004/spectra/sample_011_raman.csv,outputs/batch_demo_004/preprocessed/sample_011_raman_normalized.csv,ok,,normalize_csv.py,0.141916
+sample_012,data/batch_demo_004/spectra/sample_012_raman.csv,outputs/batch_demo_004/preprocessed/sample_012_raman_normalized.csv,ok,,normalize_csv.py,0.158980
+sample_013,data/batch_demo_004/spectra/sample_013_raman.csv,outputs/batch_demo_004/preprocessed/sample_013_raman_normalized.csv,ok,,normalize_csv.py,0.131404
+sample_014,data/batch_demo_004/spectra/sample_014_raman.csv,outputs/batch_demo_004/preprocessed/sample_014_raman_normalized.csv,ok,,normalize_csv.py,0.180667
+sample_015,data/batch_demo_004/spectra/sample_015_raman.csv,outputs/batch_demo_004/preprocessed/sample_015_raman_normalized.csv,ok,,normalize_csv.py,0.148414
+sample_016,data/batch_demo_004/spectra/sample_016_raman.csv,outputs/batch_demo_004/preprocessed/sample_016_raman_normalized.csv,ok,,normalize_csv.py,0.165890
+sample_017,data/batch_demo_004/spectra/sample_017_raman.csv,outputs/batch_demo_004/preprocessed/sample_017_raman_normalized.csv,ok,,normalize_csv.py,0.166830
+sample_018,data/batch_demo_004/spectra/sample_018_raman.csv,outputs/batch_demo_004/preprocessed/sample_018_raman_normalized.csv,ok,,normalize_csv.py,0.113222
+sample_019,data/batch_demo_004/spectra/sample_019_raman.csv,outputs/batch_demo_004/preprocessed/sample_019_raman_normalized.csv,ok,,normalize_csv.py,0.086679
+sample_020,data/batch_demo_004/spectra/sample_020_raman.csv,outputs/batch_demo_004/preprocessed/sample_020_raman_normalized.csv,ok,,normalize_csv.py,0.141236
+sample_021,data/batch_demo_004/spectra/sample_021_raman.csv,.,skipped,critical QC finding,normalize_csv.py,0.000000

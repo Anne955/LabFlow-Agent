@@ -1,0 +1,278 @@
+{
+  "batch_id": "batch_demo_005",
+  "expected_findings": [
+    {
+      "sample_id": "sample_003",
+      "check": "missing_metadata_value",
+      "severity": "warning",
+      "source": "metadata.csv",
+      "description": "operator is missing"
+    },
+    {
+      "sample_id": "sample_004",
+      "check": "duplicate_sample_id",
+      "severity": "critical",
+      "source": "metadata.csv",
+      "description": "duplicate sample id"
+    },
+    {
+      "sample_id": "sample_006",
+      "check": "missing_spectra_file",
+      "severity": "critical",
+      "source": "spectra",
+      "description": "metadata sample has no spectra file"
+    },
+    {
+      "sample_id": "sample_007",
+      "check": "missing_spectrum_column",
+      "severity": "critical",
+      "source": "data/batch_demo_005/spectra/sample_007_raman.csv",
+      "description": "missing intensity column"
+    },
+    {
+      "sample_id": "sample_008",
+      "check": "negative_intensity",
+      "severity": "critical",
+      "source": "data/batch_demo_005/spectra/sample_008_raman.csv",
+      "description": "negative intensity"
+    },
+    {
+      "sample_id": "sample_009",
+      "check": "x_not_monotonic",
+      "severity": "critical",
+      "source": "data/batch_demo_005/spectra/sample_009_raman.csv",
+      "description": "x is not strictly increasing"
+    },
+    {
+      "sample_id": "sample_010",
+      "check": "too_few_points",
+      "severity": "warning",
+      "source": "data/batch_demo_005/spectra/sample_010_raman.csv",
+      "description": "too few points"
+    },
+    {
+      "sample_id": "sample_011",
+      "check": "extreme_intensity",
+      "severity": "warning",
+      "source": "data/batch_demo_005/spectra/sample_011_raman.csv",
+      "description": "extreme intensity outlier"
+    },
+    {
+      "sample_id": "sample_021",
+      "check": "file_without_metadata",
+      "severity": "critical",
+      "source": "data/batch_demo_005/spectra/sample_021_raman.csv",
+      "description": "orphan spectra file"
+    },
+    {
+      "sample_id": "badname",
+      "check": "invalid_filename",
+      "severity": "warning",
+      "source": "data/batch_demo_005/spectra/badname.csv",
+      "description": "invalid filename"
+    },
+    {
+      "sample_id": "badname",
+      "check": "file_without_metadata",
+      "severity": "critical",
+      "source": "data/batch_demo_005/spectra/badname.csv",
+      "description": "invalid filename also has no metadata record"
+    }
+  ],
+  "labels": [
+    {
+      "sample_id": "sample_003",
+      "check": "missing_metadata_value",
+      "severity": "warning",
+      "source": "metadata.csv",
+      "description": "operator is missing"
+    },
+    {
+      "sample_id": "sample_004",
+      "check": "duplicate_sample_id",
+      "severity": "critical",
+      "source": "metadata.csv",
+      "description": "duplicate sample id"
+    },
+    {
+      "sample_id": "sample_006",
+      "check": "missing_spectra_file",
+      "severity": "critical",
+      "source": "spectra",
+      "description": "metadata sample has no spectra file"
+    },
+    {
+      "sample_id": "sample_007",
+      "check": "missing_spectrum_column",
+      "severity": "critical",
+      "source": "data/batch_demo_005/spectra/sample_007_raman.csv",
+      "description": "missing intensity column"
+    },
+    {
+      "sample_id": "sample_008",
+      "check": "negative_intensity",
+      "severity": "critical",
+      "source": "data/batch_demo_005/spectra/sample_008_raman.csv",
+      "description": "negative intensity"
+    },
+    {
+      "sample_id": "sample_009",
+      "check": "x_not_monotonic",
+      "severity": "critical",
+      "source": "data/batch_demo_005/spectra/sample_009_raman.csv",
+      "description": "x is not strictly increasing"
+    },
+    {
+      "sample_id": "sample_010",
+      "check": "too_few_points",
+      "severity": "warning",
+      "source": "data/batch_demo_005/spectra/sample_010_raman.csv",
+      "description": "too few points"
+    },
+    {
+      "sample_id": "sample_011",
+      "check": "extreme_intensity",
+      "severity": "warning",
+      "source": "data/batch_demo_005/spectra/sample_011_raman.csv",
+      "description": "extreme intensity outlier"
+    },
+    {
+      "sample_id": "sample_021",
+      "check": "file_without_metadata",
+      "severity": "critical",
+      "source": "data/batch_demo_005/spectra/sample_021_raman.csv",
+      "description": "orphan spectra file"
+    },
+    {
+      "sample_id": "badname",
+      "check": "invalid_filename",
+      "severity": "warning",
+      "source": "data/batch_demo_005/spectra/badname.csv",
+      "description": "invalid filename"
+    },
+    {
+      "sample_id": "badname",
+      "check": "file_without_metadata",
+      "severity": "critical",
+      "source": "data/batch_demo_005/spectra/badname.csv",
+      "description": "invalid filename also has no metadata record"
+    }
+  ],
+  "raw_data_manifest": [
+    {
+      "path": "data/batch_demo_005/instrument_log.txt",
+      "sha256": "618aabf7388c0604cad99a88a99de43112e145c67d815f0dae83598726410457",
+      "size": 270
+    },
+    {
+      "path": "data/batch_demo_005/metadata.csv",
+      "sha256": "b77a7600c984578bc63c203e8af6d74d71fdee2a6412c9173215e38307b4c649",
+      "size": 599
+    },
+    {
+      "path": "data/batch_demo_005/spectra/badname.csv",
+      "sha256": "ba5d90f1479605cfcd4a998963c477fc1059f8946d3b4f4b1519f70c6c534bab",
+      "size": 100
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_001_raman.csv",
+      "sha256": "1ab100902bfe8f63de08a43ce6148db02c8473a01d2fc638ae407b3b8b81355c",
+      "size": 100
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_002_raman.csv",
+      "sha256": "3351e57a2765078bd630ab94caae54079f396ea996cbfdae9879b78e02f5ab04",
+      "size": 100
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_003_raman.csv",
+      "sha256": "e072f84225fc7c4c0a2b90fc6b72894b934cec9c86a0e10ee75fb311a8165076",
+      "size": 100
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_004_raman.csv",
+      "sha256": "ff87ce8d66cde7da66f0fd83294ae55f7841070fbe8ec2f7336d7fab853c18ab",
+      "size": 100
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_005_raman.csv",
+      "sha256": "883cebb35491e5d879de7deafea36a7aae43eeab0b9ceb214a2b462a56e74ec8",
+      "size": 100
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_007_raman.csv",
+      "sha256": "b09f087791503e4a3603979bcbebfc2a4fe0639e93cb3c8389ec067ede8a57c0",
+      "size": 42
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_008_raman.csv",
+      "sha256": "be6c1dd2ec43e49729a603f133b0c4cc08439680c0d7bf612f05ebf95c4be36b",
+      "size": 99
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_009_raman.csv",
+      "sha256": "0e61847e46fafaf7803323d9594d0f1fb4e78d807ce9c796f8e070e547d60cfa",
+      "size": 100
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_010_raman.csv",
+      "sha256": "7290b34b132f18e51a89a366960e00f351639cd7a8f001f4bc03545acb278f7a",
+      "size": 34
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_011_raman.csv",
+      "sha256": "3f6bc04395de6c0282cbf3052d65e08784a51b573f3ef280953dc5ab087ff91d",
+      "size": 103
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_012_raman.csv",
+      "sha256": "8a28702585a82a847cb16bb8b6f093fc7d4f8917b4fded292f63966afbd2b2d9",
+      "size": 100
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_013_raman.csv",
+      "sha256": "8e922141f6731818d16e9cefd5c58a1075f87bb1e084918c28429b034960f8c7",
+      "size": 100
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_014_raman.csv",
+      "sha256": "da68201ea20f63d2cc9af22355bcbab0182b9a7b962bde64f601c2f68fb83231",
+      "size": 100
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_015_raman.csv",
+      "sha256": "0e8fc51da9708f6a1f34138ba373698b2848fba4711d029d1a5f2064b67fcdd3",
+      "size": 100
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_016_raman.csv",
+      "sha256": "ef4c863e8b5dd0c136108af482c80adb92e2985c5f3032a514bbeb2ccf8512be",
+      "size": 100
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_017_raman.csv",
+      "sha256": "8452868639e9acfc7f560dac837cafca7da7c1ed60090023b26ef54ffb294bbe",
+      "size": 100
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_018_raman.csv",
+      "sha256": "c808b2dd472bea1ee2a4b8ad825bca3a93dbe479870e51e956e192e2e424e39d",
+      "size": 100
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_019_raman.csv",
+      "sha256": "51284b279c3e50ae76940a56643d37c8e43961283440b9ff5d0a759b5b9dd5d8",
+      "size": 100
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_020_raman.csv",
+      "sha256": "7eca18cf1f900ad48f2948b9933cd102809e795c533295f3c17ff42c773895e3",
+      "size": 100
+    },
+    {
+      "path": "data/batch_demo_005/spectra/sample_021_raman.csv",
+      "sha256": "2bc65502b0bdd5f8593e4bfa4fbc197905b06791800c19d17d97fe491421737a",
+      "size": 100
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+batch_id,sample_id,check,error_type,predicted,expected,reason
+batch_demo_001,sample_011,extreme_intensity,false_negative,false,true,Expected finding was not predicted
+batch_demo_002,sample_011,extreme_intensity,false_negative,false,true,Expected finding was not predicted
+batch_demo_003,sample_011,extreme_intensity,false_negative,false,true,Expected finding was not predicted
+batch_demo_004,sample_011,extreme_intensity,false_negative,false,true,Expected finding was not predicted
+batch_demo_005,sample_011,extreme_intensity,false_negative,false,true,Expected finding was not predicted

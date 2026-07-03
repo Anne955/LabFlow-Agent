@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "labflow-agent"
+version = "0.1.0"
+description = "A local scientific-data workflow assistant for experimental batch QC."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.5",
+  "ruff>=0.4.4",
+]
+
+[project.scripts]
+labflow-agent = "pico.cli:main"
+pico = "pico.cli:main"
+
+[tool.setuptools]
+packages = ["pico", "pico.providers", "pico.features", "pico.evaluation", "pico.safety", "pico.agent"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

@@ -1,0 +1,1 @@
+{"intent":"qc_only","steps":[{"name":"scan_experiment_dir","kind":"tool"},{"name":"quality_check","kind":"tool"},{"name":"summarize_outputs","kind":"tool"},{"name":"export_workflow_log","kind":"tool"}]}

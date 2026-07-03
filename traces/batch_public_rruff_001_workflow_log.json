@@ -1,0 +1,312 @@
+{
+  "batch_id": "batch_public_rruff_001",
+  "run_id": "run_d8c06a5c3e3a",
+  "session_id": "session_87a238f64b27",
+  "generated_at": "2026-06-30T15:58:39.534787+00:00",
+  "event_count": 7,
+  "total_duration_seconds": 2.6145249000401236,
+  "events": [
+    {
+      "event_index": 1,
+      "timestamp": "2026-06-30T15:58:36.850907+00:00",
+      "run_id": "run_d8c06a5c3e3a",
+      "session_id": "session_87a238f64b27",
+      "batch_id": "batch_public_rruff_001",
+      "tool": "scan_experiment_dir",
+      "status": "ok",
+      "error_code": null,
+      "input": {
+        "experiment_dir": "data/batch_public_rruff_001",
+        "batch_id": "batch_public_rruff_001"
+      },
+      "output_paths": [],
+      "metadata": {
+        "batch_id": "batch_public_rruff_001",
+        "experiment_dir": "data/batch_public_rruff_001",
+        "metadata_path": "data/batch_public_rruff_001/metadata.csv",
+        "spectra_dir": "data/batch_public_rruff_001/spectra",
+        "instrument_log_path": "data/batch_public_rruff_001/instrument_log.txt",
+        "spectra_file_count": 20,
+        "other_file_count": 0,
+        "file_types": {
+          ".csv": 21,
+          ".txt": 1
+        },
+        "suspicious_filenames": [],
+        "missing": []
+      },
+      "duration_seconds": 0.007078700000420213
+    },
+    {
+      "event_index": 2,
+      "timestamp": "2026-06-30T15:58:36.866128+00:00",
+      "run_id": "run_d8c06a5c3e3a",
+      "session_id": "session_87a238f64b27",
+      "batch_id": "batch_public_rruff_001",
+      "tool": "inspect_table",
+      "status": "ok",
+      "error_code": null,
+      "input": {
+        "path": "data/batch_public_rruff_001/metadata.csv",
+        "max_rows": 5
+      },
+      "output_paths": [],
+      "metadata": {
+        "path": "data/batch_public_rruff_001/metadata.csv",
+        "rows": 20,
+        "columns": [
+          "sample_id",
+          "method",
+          "instrument",
+          "operator",
+          "file_path",
+          "source_dataset",
+          "source_id"
+        ],
+        "types": {
+          "sample_id": "string",
+          "method": "string",
+          "instrument": "string",
+          "operator": "string",
+          "file_path": "string",
+          "source_dataset": "string",
+          "source_id": "string"
+        },
+        "missing_values": {
+          "sample_id": 0,
+          "method": 0,
+          "instrument": 0,
+          "operator": 0,
+          "file_path": 0,
+          "source_dataset": 0,
+          "source_id": 0
+        },
+        "duplicate_sample_id": [],
+        "numeric_stats": {},
+        "preview": [
+          {
+            "sample_id": "rruff_001",
+            "method": "raman",
+            "instrument": "RRUFF public Raman export",
+            "operator": "public_fixture_converter",
+            "file_path": "spectra/rruff_001_raman.csv",
+            "source_dataset": "RRUFF Raman public database",
+            "source_id": "R050001"
+          },
+          {
+            "sample_id": "rruff_002",
+            "method": "raman",
+            "instrument": "RRUFF public Raman export",
+            "operator": "public_fixture_converter",
+            "file_path": "spectra/rruff_002_raman.csv",
+            "source_dataset": "RRUFF Raman public database",
+            "source_id": "R050002"
+          },
+          {
+            "sample_id": "rruff_003",
+            "method": "raman",
+            "instrument": "RRUFF public Raman export",
+            "operator": "public_fixture_converter",
+            "file_path": "spectra/rruff_003_raman.csv",
+            "source_dataset": "RRUFF Raman public database",
+            "source_id": "R050003"
+          },
+          {
+            "sample_id": "rruff_004",
+            "method": "raman",
+            "instrument": "RRUFF public Raman export",
+            "operator": "public_fixture_converter",
+            "file_path": "spectra/rruff_004_raman.csv",
+            "source_dataset": "RRUFF Raman public database",
+            "source_id": "R050004"
+          },
+          {
+            "sample_id": "rruff_005",
+            "method": "raman",
+            "instrument": "RRUFF public Raman export",
+            "operator": "public_fixture_converter",
+            "file_path": "spectra/rruff_005_raman.csv",
+            "source_dataset": "RRUFF Raman public database",
+            "source_id": "R050005"
+          }
+        ]
+      },
+      "duration_seconds": 0.009288500004913658
+    },
+    {
+      "event_index": 3,
+      "timestamp": "2026-06-30T15:58:37.078259+00:00",
+      "run_id": "run_d8c06a5c3e3a",
+      "session_id": "session_87a238f64b27",
+      "batch_id": "batch_public_rruff_001",
+      "tool": "quality_check",
+      "status": "ok",
+      "error_code": null,
+      "input": {
+        "experiment_dir": "data/batch_public_rruff_001",
+        "batch_id": "batch_public_rruff_001"
+      },
+      "output_paths": [
+        "outputs/batch_public_rruff_001/qc_summary.csv"
+      ],
+      "metadata": {
+        "batch_id": "batch_public_rruff_001",
+        "qc_summary_path": "outputs/batch_public_rruff_001/qc_summary.csv",
+        "finding_count": 0,
+        "abnormal_sample_count": 0,
+        "abnormal_samples": [],
+        "by_check": {},
+        "by_severity": {}
+      },
+      "duration_seconds": 0.20727899996563792
+    },
+    {
+      "event_index": 4,
+      "timestamp": "2026-06-30T15:58:39.450844+00:00",
+      "run_id": "run_d8c06a5c3e3a",
+      "session_id": "session_87a238f64b27",
+      "batch_id": "batch_public_rruff_001",
+      "tool": "run_preprocess_script",
+      "status": "ok",
+      "error_code": null,
+      "input": {
+        "script_name": "normalize_csv.py",
+        "batch_id": "batch_public_rruff_001",
+        "mode": "batch",
+        "input_dir": "data/batch_public_rruff_001/spectra",
+        "input_glob": "*.csv",
+        "output_suffix": "_normalized.csv",
+        "skip_critical": true
+      },
+      "output_paths": [
+        "outputs/batch_public_rruff_001/preprocessed/rruff_001_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_002_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_003_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_004_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_005_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_006_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_007_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_008_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_009_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_010_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_011_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_012_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_013_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_014_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_015_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_016_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_017_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_018_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_019_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocessed/rruff_020_raman_normalized.csv",
+        "outputs/batch_public_rruff_001/preprocess_summary.csv"
+      ],
+      "metadata": {
+        "batch_id": "batch_public_rruff_001",
+        "script_name": "normalize_csv.py",
+        "mode": "batch",
+        "input_file_count": 20,
+        "success_count": 20,
+        "failed_count": 0,
+        "skipped_count": 0,
+        "summary_path": "outputs/batch_public_rruff_001/preprocess_summary.csv"
+      },
+      "duration_seconds": 2.367964600038249
+    },
+    {
+      "event_index": 5,
+      "timestamp": "2026-06-30T15:58:39.476664+00:00",
+      "run_id": "run_d8c06a5c3e3a",
+      "session_id": "session_87a238f64b27",
+      "batch_id": "batch_public_rruff_001",
+      "tool": "summarize_outputs",
+      "status": "ok",
+      "error_code": null,
+      "input": {
+        "batch_id": "batch_public_rruff_001"
+      },
+      "output_paths": [],
+      "metadata": {
+        "batch_id": "batch_public_rruff_001",
+        "output_files": [
+          "outputs/batch_public_rruff_001/preprocess_summary.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_001_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_002_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_003_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_004_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_005_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_006_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_007_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_008_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_009_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_010_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_011_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_012_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_013_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_014_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_015_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_016_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_017_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_018_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_019_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/preprocessed/rruff_020_raman_normalized.csv",
+          "outputs/batch_public_rruff_001/qc_summary.csv"
+        ],
+        "finding_count": 0,
+        "abnormal_sample_count": 0,
+        "preprocessed_file_count": 20,
+        "preprocess_success_count": 20,
+        "preprocess_failed_count": 0,
+        "preprocess_skipped_count": 0
+      },
+      "duration_seconds": 0.020002699980977923
+    },
+    {
+      "event_index": 6,
+      "timestamp": "2026-06-30T15:58:39.484084+00:00",
+      "run_id": "run_d8c06a5c3e3a",
+      "session_id": "session_87a238f64b27",
+      "batch_id": "batch_public_rruff_001",
+      "tool": "generate_report",
+      "status": "ok",
+      "error_code": null,
+      "input": {
+        "batch_id": "batch_public_rruff_001"
+      },
+      "output_paths": [
+        "reports/<redacted:token>.md"
+      ],
+      "metadata": {
+        "batch_id": "batch_public_rruff_001",
+        "report_path": "reports/<redacted:token>.md",
+        "finding_count": 0,
+        "preprocess_success_count": 20,
+        "preprocess_failed_count": 0,
+        "preprocess_skipped_count": 0
+      },
+      "duration_seconds": 0.002399700053501874
+    },
+    {
+      "event_index": 7,
+      "timestamp": "2026-06-30T15:58:39.492974+00:00",
+      "run_id": "run_d8c06a5c3e3a",
+      "session_id": "session_87a238f64b27",
+      "batch_id": "batch_public_rruff_001",
+      "tool": "export_workflow_log",
+      "status": "ok",
+      "error_code": null,
+      "input": {
+        "batch_id": "batch_public_rruff_001"
+      },
+      "output_paths": [
+        "traces/<redacted:token>.json"
+      ],
+      "metadata": {
+        "batch_id": "batch_public_rruff_001",
+        "workflow_log_path": "traces/<redacted:token>.json",
+        "pending_runtime_export": true
+      },
+      "duration_seconds": 0.0005116999964229763
+    }
+  ]
+}

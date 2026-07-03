@@ -1,0 +1,1 @@
+{"intent":"full_qc_workflow","steps":[{"name":"scan_experiment_dir","kind":"tool"},{"name":"inspect_table","kind":"tool"},{"name":"quality_check","kind":"tool"},{"name":"run_preprocess_script","kind":"tool"},{"name":"summarize_outputs","kind":"tool"},{"name":"generate_report","kind":"tool"},{"name":"export_workflow_log","kind":"tool"}]}

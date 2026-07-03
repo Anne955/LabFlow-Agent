@@ -1,0 +1,10 @@
+{
+  "tasks": [
+    {
+      "id": "fake-final-smoke",
+      "prompt": "Return a short final answer.",
+      "category": "smoke",
+      "max_steps": 2
+    }
+  ]
+}

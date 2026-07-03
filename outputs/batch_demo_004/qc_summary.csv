@@ -1,0 +1,11 @@
+finding_id,batch_id,sample_id,file,check,severity,status,message,evidence
+F0001,batch_demo_004,sample_003,data/batch_demo_004/metadata.csv,missing_metadata_value,warning,fail,metadata field operator is blank,operator
+F0002,batch_demo_004,sample_004,data/batch_demo_004/metadata.csv,duplicate_sample_id,critical,fail,sample_id appears 2 times,2
+F0003,batch_demo_004,badname,data/batch_demo_004/spectra/badname.csv,invalid_filename,warning,fail,filename should match sample_id_method.csv,badname.csv
+F0004,batch_demo_004,badname,data/batch_demo_004/spectra/badname.csv,file_without_metadata,critical,fail,spectra file has no matching metadata record,badname.csv
+F0005,batch_demo_004,sample_007,data/batch_demo_004/spectra/sample_007_raman.csv,missing_spectrum_column,critical,fail,required spectra column is missing: intensity,intensity
+F0006,batch_demo_004,sample_008,data/batch_demo_004/spectra/sample_008_raman.csv,negative_intensity,critical,fail,row 4 has negative intensity,-5.0
+F0007,batch_demo_004,sample_009,data/batch_demo_004/spectra/sample_009_raman.csv,x_not_monotonic,critical,fail,x values must be strictly increasing,
+F0008,batch_demo_004,sample_010,data/batch_demo_004/spectra/sample_010_raman.csv,too_few_points,warning,fail,spectra has too few points: 3,3
+F0009,batch_demo_004,sample_021,data/batch_demo_004/spectra/sample_021_raman.csv,file_without_metadata,critical,fail,spectra file has no matching metadata record,sample_021_raman.csv
+F0010,batch_demo_004,sample_006,data/batch_demo_004/spectra/sample_006_*.csv,missing_spectra_file,critical,fail,metadata sample has no corresponding spectra CSV,

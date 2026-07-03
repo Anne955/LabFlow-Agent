@@ -1,0 +1,305 @@
+{
+  "batch_id": "batch_demo_004",
+  "run_id": "run_2acb382e40f1",
+  "session_id": "session_21e19a92f907",
+  "generated_at": "2026-06-29T15:49:07.007639+00:00",
+  "event_count": 7,
+  "total_duration_seconds": 2.275435399962589,
+  "events": [
+    {
+      "event_index": 1,
+      "timestamp": "2026-06-29T15:49:04.636145+00:00",
+      "run_id": "run_2acb382e40f1",
+      "session_id": "session_21e19a92f907",
+      "batch_id": "batch_demo_004",
+      "tool": "scan_experiment_dir",
+      "status": "ok",
+      "error_code": null,
+      "input": {
+        "experiment_dir": "data/batch_demo_004",
+        "batch_id": "batch_demo_004"
+      },
+      "output_paths": [],
+      "metadata": {
+        "batch_id": "batch_demo_004",
+        "experiment_dir": "data/batch_demo_004",
+        "metadata_path": "data/batch_demo_004/metadata.csv",
+        "spectra_dir": "data/batch_demo_004/spectra",
+        "instrument_log_path": "data/batch_demo_004/instrument_log.txt",
+        "spectra_file_count": 21,
+        "other_file_count": 0,
+        "file_types": {
+          ".csv": 22,
+          ".txt": 1
+        },
+        "suspicious_filenames": [
+          "badname.csv"
+        ],
+        "missing": []
+      },
+      "duration_seconds": 0.004265700001269579
+    },
+    {
+      "event_index": 2,
+      "timestamp": "2026-06-29T15:49:04.645171+00:00",
+      "run_id": "run_2acb382e40f1",
+      "session_id": "session_21e19a92f907",
+      "batch_id": "batch_demo_004",
+      "tool": "inspect_table",
+      "status": "ok",
+      "error_code": null,
+      "input": {
+        "path": "data/batch_demo_004/metadata.csv",
+        "max_rows": 5
+      },
+      "output_paths": [],
+      "metadata": {
+        "path": "data/batch_demo_004/metadata.csv",
+        "rows": 21,
+        "columns": [
+          "sample_id",
+          "method",
+          "operator",
+          "condition"
+        ],
+        "types": {
+          "sample_id": "string",
+          "method": "string",
+          "operator": "string",
+          "condition": "string"
+        },
+        "missing_values": {
+          "sample_id": 0,
+          "method": 0,
+          "operator": 1,
+          "condition": 0
+        },
+        "duplicate_sample_id": [
+          "sample_004"
+        ],
+        "numeric_stats": {},
+        "preview": [
+          {
+            "sample_id": "sample_001",
+            "method": "raman",
+            "operator": "A",
+            "condition": "control"
+          },
+          {
+            "sample_id": "sample_002",
+            "method": "raman",
+            "operator": "B",
+            "condition": "control"
+          },
+          {
+            "sample_id": "sample_003",
+            "method": "raman",
+            "operator": "",
+            "condition": "control"
+          },
+          {
+            "sample_id": "sample_004",
+            "method": "raman",
+            "operator": "D",
+            "condition": "test"
+          },
+          {
+            "sample_id": "sample_005",
+            "method": "raman",
+            "operator": "E",
+            "condition": "test"
+          }
+        ]
+      },
+      "duration_seconds": 0.0017583000008016825
+    },
+    {
+      "event_index": 3,
+      "timestamp": "2026-06-29T15:49:04.677205+00:00",
+      "run_id": "run_2acb382e40f1",
+      "session_id": "session_21e19a92f907",
+      "batch_id": "batch_demo_004",
+      "tool": "quality_check",
+      "status": "ok",
+      "error_code": null,
+      "input": {
+        "experiment_dir": "data/batch_demo_004",
+        "batch_id": "batch_demo_004"
+      },
+      "output_paths": [
+        "outputs/batch_demo_004/qc_summary.csv"
+      ],
+      "metadata": {
+        "batch_id": "batch_demo_004",
+        "qc_summary_path": "outputs/batch_demo_004/qc_summary.csv",
+        "finding_count": 10,
+        "abnormal_sample_count": 9,
+        "abnormal_samples": [
+          "badname",
+          "sample_003",
+          "sample_004",
+          "sample_006",
+          "sample_007",
+          "sample_008",
+          "sample_009",
+          "sample_010",
+          "sample_021"
+        ],
+        "by_check": {
+          "duplicate_sample_id": 1,
+          "file_without_metadata": 2,
+          "invalid_filename": 1,
+          "missing_metadata_value": 1,
+          "missing_spectra_file": 1,
+          "missing_spectrum_column": 1,
+          "negative_intensity": 1,
+          "too_few_points": 1,
+          "x_not_monotonic": 1
+        },
+        "by_severity": {
+          "critical": 7,
+          "warning": 3
+        }
+      },
+      "duration_seconds": 0.024506399990059435
+    },
+    {
+      "event_index": 4,
+      "timestamp": "2026-06-29T15:49:06.894381+00:00",
+      "run_id": "run_2acb382e40f1",
+      "session_id": "session_21e19a92f907",
+      "batch_id": "batch_demo_004",
+      "tool": "run_preprocess_script",
+      "status": "ok",
+      "error_code": null,
+      "input": {
+        "script_name": "normalize_csv.py",
+        "batch_id": "batch_demo_004",
+        "mode": "batch",
+        "input_dir": "data/batch_demo_004/spectra",
+        "input_glob": "*.csv",
+        "output_suffix": "_normalized.csv",
+        "skip_critical": true
+      },
+      "output_paths": [
+        "outputs/batch_demo_004/preprocessed/sample_001_raman_normalized.csv",
+        "outputs/batch_demo_004/preprocessed/sample_002_raman_normalized.csv",
+        "outputs/batch_demo_004/preprocessed/sample_003_raman_normalized.csv",
+        "outputs/batch_demo_004/preprocessed/sample_005_raman_normalized.csv",
+        "outputs/batch_demo_004/preprocessed/sample_010_raman_normalized.csv",
+        "outputs/batch_demo_004/preprocessed/sample_011_raman_normalized.csv",
+        "outputs/batch_demo_004/preprocessed/sample_012_raman_normalized.csv",
+        "outputs/batch_demo_004/preprocessed/sample_013_raman_normalized.csv",
+        "outputs/batch_demo_004/preprocessed/sample_014_raman_normalized.csv",
+        "outputs/batch_demo_004/preprocessed/sample_015_raman_normalized.csv",
+        "outputs/batch_demo_004/preprocessed/sample_016_raman_normalized.csv",
+        "outputs/batch_demo_004/preprocessed/sample_017_raman_normalized.csv",
+        "outputs/batch_demo_004/preprocessed/sample_018_raman_normalized.csv",
+        "outputs/batch_demo_004/preprocessed/sample_019_raman_normalized.csv",
+        "outputs/batch_demo_004/preprocessed/sample_020_raman_normalized.csv",
+        "outputs/batch_demo_004/preprocess_summary.csv"
+      ],
+      "metadata": {
+        "batch_id": "batch_demo_004",
+        "script_name": "normalize_csv.py",
+        "mode": "batch",
+        "input_file_count": 21,
+        "success_count": 15,
+        "failed_count": 0,
+        "skipped_count": 6,
+        "summary_path": "outputs/batch_demo_004/preprocess_summary.csv"
+      },
+      "duration_seconds": 2.2114578000037
+    },
+    {
+      "event_index": 5,
+      "timestamp": "2026-06-29T15:49:06.934396+00:00",
+      "run_id": "run_2acb382e40f1",
+      "session_id": "session_21e19a92f907",
+      "batch_id": "batch_demo_004",
+      "tool": "summarize_outputs",
+      "status": "ok",
+      "error_code": null,
+      "input": {
+        "batch_id": "batch_demo_004"
+      },
+      "output_paths": [],
+      "metadata": {
+        "batch_id": "batch_demo_004",
+        "output_files": [
+          "outputs/batch_demo_004/preprocess_summary.csv",
+          "outputs/batch_demo_004/preprocessed/sample_001_raman_normalized.csv",
+          "outputs/batch_demo_004/preprocessed/sample_002_raman_normalized.csv",
+          "outputs/batch_demo_004/preprocessed/sample_003_raman_normalized.csv",
+          "outputs/batch_demo_004/preprocessed/sample_005_raman_normalized.csv",
+          "outputs/batch_demo_004/preprocessed/sample_010_raman_normalized.csv",
+          "outputs/batch_demo_004/preprocessed/sample_011_raman_normalized.csv",
+          "outputs/batch_demo_004/preprocessed/sample_012_raman_normalized.csv",
+          "outputs/batch_demo_004/preprocessed/sample_013_raman_normalized.csv",
+          "outputs/batch_demo_004/preprocessed/sample_014_raman_normalized.csv",
+          "outputs/batch_demo_004/preprocessed/sample_015_raman_normalized.csv",
+          "outputs/batch_demo_004/preprocessed/sample_016_raman_normalized.csv",
+          "outputs/batch_demo_004/preprocessed/sample_017_raman_normalized.csv",
+          "outputs/batch_demo_004/preprocessed/sample_018_raman_normalized.csv",
+          "outputs/batch_demo_004/preprocessed/sample_019_raman_normalized.csv",
+          "outputs/batch_demo_004/preprocessed/sample_020_raman_normalized.csv",
+          "outputs/batch_demo_004/qc_summary.csv"
+        ],
+        "finding_count": 10,
+        "abnormal_sample_count": 9,
+        "preprocessed_file_count": 15,
+        "preprocess_success_count": 15,
+        "preprocess_failed_count": 0,
+        "preprocess_skipped_count": 6
+      },
+      "duration_seconds": 0.027019599976483732
+    },
+    {
+      "event_index": 6,
+      "timestamp": "2026-06-29T15:49:06.951830+00:00",
+      "run_id": "run_2acb382e40f1",
+      "session_id": "session_21e19a92f907",
+      "batch_id": "batch_demo_004",
+      "tool": "generate_report",
+      "status": "ok",
+      "error_code": null,
+      "input": {
+        "batch_id": "batch_demo_004"
+      },
+      "output_paths": [
+        "reports/batch_demo_004_qc_report.md"
+      ],
+      "metadata": {
+        "batch_id": "batch_demo_004",
+        "report_path": "reports/batch_demo_004_qc_report.md",
+        "finding_count": 10,
+        "preprocess_success_count": 15,
+        "preprocess_failed_count": 0,
+        "preprocess_skipped_count": 6
+      },
+      "duration_seconds": 0.005730099976062775
+    },
+    {
+      "event_index": 7,
+      "timestamp": "2026-06-29T15:49:06.958339+00:00",
+      "run_id": "run_2acb382e40f1",
+      "session_id": "session_21e19a92f907",
+      "batch_id": "batch_demo_004",
+      "tool": "export_workflow_log",
+      "status": "ok",
+      "error_code": null,
+      "input": {
+        "batch_id": "batch_demo_004"
+      },
+      "output_paths": [
+        "traces/batch_demo_004_workflow_log.json"
+      ],
+      "metadata": {
+        "batch_id": "batch_demo_004",
+        "workflow_log_path": "traces/batch_demo_004_workflow_log.json",
+        "pending_runtime_export": true
+      },
+      "duration_seconds": 0.0006975000142119825
+    }
+  ]
+}

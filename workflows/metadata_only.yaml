@@ -1,0 +1,1 @@
+{"intent":"metadata_only","steps":[{"name":"scan_experiment_dir","kind":"tool"},{"name":"inspect_table","kind":"tool"}]}

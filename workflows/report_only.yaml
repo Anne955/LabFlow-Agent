@@ -1,0 +1,1 @@
+{"intent":"report_only","steps":[{"name":"summarize_outputs","kind":"tool"},{"name":"generate_report","kind":"tool"},{"name":"export_workflow_log","kind":"tool"}]}

@@ -1,0 +1,8 @@
+Instrument: RRUFF public Raman export
+Batch: batch_public_rruff_001
+Source dataset: RRUFF Raman public database
+Conversion script: scripts/convert_rruff_to_labflow_csv.py
+Purpose: LabFlow compatibility validation only; not scientific accuracy validation.
+Raw input directory: data_public/rruff_raw
+Converted spectra count: 20
+Skipped raw files: 0

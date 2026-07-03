@@ -1,0 +1,15 @@
+# RRUFF Raman fixture R050017
+# Source: RRUFF Raman public database style text export
+## Raman shift intensity
+100 1085
+110,1088
+120	1091	extra
+130 1094
+140,1097
+150	1100	extra
+160 1103
+170,1106
+180	1109	extra
+190 1112
+200,1115
+210	1118	extra

@@ -1,0 +1,21 @@
+sample_id,method,instrument,operator,file_path,source_dataset,source_id
+rruff_001,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_001_raman.csv,RRUFF Raman public database,R050001
+rruff_002,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_002_raman.csv,RRUFF Raman public database,R050002
+rruff_003,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_003_raman.csv,RRUFF Raman public database,R050003
+rruff_004,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_004_raman.csv,RRUFF Raman public database,R050004
+rruff_005,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_005_raman.csv,RRUFF Raman public database,R050005
+rruff_006,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_006_raman.csv,RRUFF Raman public database,R050006
+rruff_007,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_007_raman.csv,RRUFF Raman public database,R050007
+rruff_008,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_008_raman.csv,RRUFF Raman public database,R050008
+rruff_009,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_009_raman.csv,RRUFF Raman public database,R050009
+rruff_010,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_010_raman.csv,RRUFF Raman public database,R050010
+rruff_011,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_011_raman.csv,RRUFF Raman public database,R050011
+rruff_012,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_012_raman.csv,RRUFF Raman public database,R050012
+rruff_013,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_013_raman.csv,RRUFF Raman public database,R050013
+rruff_014,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_014_raman.csv,RRUFF Raman public database,R050014
+rruff_015,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_015_raman.csv,RRUFF Raman public database,R050015
+rruff_016,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_016_raman.csv,RRUFF Raman public database,R050016
+rruff_017,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_017_raman.csv,RRUFF Raman public database,R050017
+rruff_018,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_018_raman.csv,RRUFF Raman public database,R050018
+rruff_019,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_019_raman.csv,RRUFF Raman public database,R050019
+rruff_020,raman,RRUFF public Raman export,public_fixture_converter,spectra/rruff_020_raman.csv,RRUFF Raman public database,R050020
