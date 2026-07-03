@@ -1,3 +1,12 @@
+"""Generic pico-harness tools and tool primitives.
+
+This module defines the generic agent tool registry (list_files, read_file,
+search, run_shell, write_file, patch_file, delegate) plus the shared
+ToolSpec/ToolResult primitives. The generic registry is the safety test bed
+exercised by tests/test_tools_safety.py and is intentionally separate from the
+LabFlow registry in pico/tool_registry.py, which is what the LabFlow runtime
+actually exposes (safety-by-default: no arbitrary shell/file-write tools).
+"""
 from __future__ import annotations
 
 import json

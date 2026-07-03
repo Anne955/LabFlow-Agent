@@ -11,6 +11,7 @@ import time
 from collections import Counter
 from pathlib import Path
 
+from .errors import ToolExecutionError
 from .safety.guard import (
     assert_raw_data_readonly,
     resolve_output_path,
@@ -91,7 +92,7 @@ def tool_inspect_table(ctx: ToolContext, args: dict[str, object]) -> ToolResult:
     path = ctx.path_resolver(str(args["path"]))
     max_rows = max(0, int(args.get("max_rows", 5)))
     if not path.is_file():
-        return ToolResult(False, f"not a file: {relpath(ctx, path)}", error_code="not_file")
+        raise ToolExecutionError(f"not a file: {relpath(ctx, path)}", error_code="not_file")
     if path.suffix.lower() != ".csv":
         return ToolResult(False, f"unsupported table format for {relpath(ctx, path)}; CSV is supported in this build", error_code="unsupported_format")
 
@@ -357,7 +358,7 @@ def tool_summarize_outputs(ctx: ToolContext, args: dict[str, object]) -> ToolRes
     output_dir = ctx.root / "outputs" / batch_id
     qc_path = output_dir / "qc_summary.csv"
     if not output_dir.exists():
-        return ToolResult(False, f"output directory not found: outputs/{batch_id}", error_code="not_found")
+        raise ToolExecutionError(f"output directory not found: outputs/{batch_id}", error_code="not_found")
     files = sorted(p for p in output_dir.rglob("*") if p.is_file())
     finding_count = 0
     abnormal_samples: set[str] = set()
