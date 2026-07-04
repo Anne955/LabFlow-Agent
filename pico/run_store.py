@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +13,15 @@ def atomic_write_json(path: Path, data: dict[str, Any]) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
     tmp.replace(path)
+
+
+def _quarantine(path: Path) -> None:
+    """Rename a corrupt file aside so the next read starts clean. Never raises."""
+    try:
+        stamp = int(time.time() * 1000)
+        path.rename(path.with_name(f"{path.stem}.corrupted.{stamp}{path.suffix}"))
+    except OSError:
+        pass
 
 
 class SessionStore:
@@ -32,7 +42,11 @@ class SessionStore:
 
     def load(self, session_id: str) -> dict[str, Any]:
         path = self.path_for(session_id)
-        return json.loads(path.read_text(encoding="utf-8"))
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            _quarantine(path)
+            return {"id": session_id, "history": [], "memory": {}}
 
     def latest(self) -> str | None:
         candidates = []
@@ -66,6 +80,15 @@ class RunStore:
         path = self.run_dir(task_state.run_id) / "task_state.json"
         atomic_write_json(path, task_state.to_dict())
         return path
+
+    def load_task_state(self, run_id: str) -> TaskState:
+        path = self.run_dir(run_id) / "task_state.json"
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            return TaskState.from_dict(data)
+        except (OSError, json.JSONDecodeError):
+            _quarantine(path)
+            return TaskState.create("recovered task")
 
     def append_trace(self, run_id: str, event: dict[str, Any]) -> Path:
         path = self.run_dir(run_id) / "trace.jsonl"
