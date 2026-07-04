@@ -13,6 +13,7 @@ from ..errors import (
     ProviderRateLimitError,  # noqa: F401  re-exported for provider HTTP-status mapping (Phase 2 Task 2)
     ProviderResponseError,  # noqa: F401  re-exported for provider HTTP-status mapping (Phase 2 Task 2)
 )
+from .retry import RetryConfig, with_retry
 
 
 @dataclass
@@ -63,11 +64,20 @@ class JsonHttpClient:
     provider = "http"
     supports_prompt_cache = False
 
-    def __init__(self, model: str, base_url: str, api_key: str | None = None, timeout: int = 60):
+    def __init__(
+        self,
+        model: str,
+        base_url: str,
+        api_key: str | None = None,
+        timeout: int = 60,
+        retry_config: RetryConfig | None = None,
+    ):
         self.model = model
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.timeout = timeout
+        self.retry_config = retry_config or RetryConfig()
+        self.retry_events: list[dict] = []
         self.last_metadata: dict[str, Any] = {}
 
     def _post_json(self, path: str, payload: dict[str, Any], headers: dict[str, str]) -> dict[str, Any]:
@@ -108,7 +118,9 @@ class OllamaModelClient(JsonHttpClient):
             "raw": False,
             "options": {"num_predict": request.max_tokens},
         }
-        raw = self._post_json("/api/generate", payload, {})
+        raw = with_retry(
+            lambda: self._post_json("/api/generate", payload, {}), self.retry_config
+        )
         text = str(raw.get("response", ""))
         usage = {
             "input_tokens": raw.get("prompt_eval_count", 0),
@@ -131,7 +143,9 @@ class OpenAICompatibleModelClient(JsonHttpClient):
             "messages": [{"role": "user", "content": request.prompt}],
             "max_tokens": request.max_tokens,
         }
-        raw = self._post_json("/v1/chat/completions", payload, headers)
+        raw = with_retry(
+            lambda: self._post_json("/v1/chat/completions", payload, headers), self.retry_config
+        )
         choices = raw.get("choices") or []
         text = ""
         if choices:
@@ -159,7 +173,9 @@ class AnthropicCompatibleModelClient(JsonHttpClient):
             "max_tokens": request.max_tokens,
             "messages": [{"role": "user", "content": request.prompt}],
         }
-        raw = self._post_json("/v1/messages", payload, headers)
+        raw = with_retry(
+            lambda: self._post_json("/v1/messages", payload, headers), self.retry_config
+        )
         text_parts = []
         for block in raw.get("content") or []:
             if isinstance(block, dict) and block.get("type") == "text":
