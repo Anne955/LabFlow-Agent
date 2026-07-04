@@ -48,6 +48,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-new-tokens", type=int, default=DEFAULT_MAX_NEW_TOKENS)
     parser.add_argument("--repl", action="store_true")
     parser.add_argument("--fake-script", default=None, help="Fake model responses separated by ||")
+    parser.add_argument(
+        "--no-planner",
+        action="store_true",
+        help="Disable the suggested-plan guidance layer",
+    )
     return parser
 
 
@@ -112,6 +117,7 @@ def build_agent(args: argparse.Namespace) -> Pico:
                 max_steps=args.max_steps,
                 max_new_tokens=args.max_new_tokens,
                 secret_env_names=secret_names,
+                use_planner=not args.no_planner,
             )
     return Pico(
         workspace=workspace,
@@ -124,6 +130,7 @@ def build_agent(args: argparse.Namespace) -> Pico:
         max_steps=args.max_steps,
         max_new_tokens=args.max_new_tokens,
         secret_env_names=secret_names,
+        use_planner=not args.no_planner,
     )
 
 

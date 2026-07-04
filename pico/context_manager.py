@@ -15,9 +15,11 @@ def build_prompt(
     history_text: str,
     user_message: str,
     budget: int = DEFAULT_CONTEXT_BUDGET,
+    suggested_plan: str = "",
 ) -> tuple[str, dict[str, Any]]:
     sections: dict[str, str] = {
         "prefix": prefix.text,
+        "suggested_plan": suggested_plan.strip(),
         "memory": memory_text.strip(),
         "relevant_memory": relevant_memory_text.strip(),
         "history": history_text.strip(),
@@ -26,9 +28,10 @@ def build_prompt(
     reductions: dict[str, int] = {}
     total = sum(len(text) for text in sections.values())
     if total > budget:
-        order = ["relevant_memory", "history", "memory", "prefix"]
+        order = ["relevant_memory", "suggested_plan", "history", "memory", "prefix"]
         limits = {
             "relevant_memory": int(budget * 0.1),
+            "suggested_plan": int(budget * 0.1),
             "history": int(budget * 0.2),
             "memory": int(budget * 0.13),
             "prefix": int(budget * 0.3),
@@ -43,7 +46,14 @@ def build_prompt(
                 sections[key] = clip(text, limit)
                 total = sum(len(t) for t in sections.values())
     prompt = ""
-    for section_name in ["prefix", "memory", "relevant_memory", "history", "current_request"]:
+    for section_name in [
+        "prefix",
+        "suggested_plan",
+        "memory",
+        "relevant_memory",
+        "history",
+        "current_request",
+    ]:
         text = sections.get(section_name, "")
         if text:
             prompt += f"<{section_name}>\n{text}\n</{section_name}>\n\n"

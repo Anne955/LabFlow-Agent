@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from .agent.planner import build_plan, render_plan
 from .config import DEFAULT_MAX_ATTEMPTS, DEFAULT_MAX_NEW_TOKENS, DEFAULT_MAX_STEPS
 from .context_manager import build_prompt
 from .features.memory import DurableMemoryStore, LayeredMemory
@@ -51,6 +52,7 @@ class Pico:
     prefix: PromptPrefix | None = None
     last_prompt_metadata: dict[str, Any] = field(default_factory=dict)
     current_batch_id: str | None = None
+    use_planner: bool = True
     tool_summaries: list[dict[str, Any]] = field(default_factory=list)
 
     @classmethod
@@ -189,7 +191,17 @@ class Pico:
             memory_text = (memory_text + "\n\n## Durable memory\n" + durable_text).strip()
         relevant = ""
         history_text = self.render_history()
-        return build_prompt(self.prefix, memory_text, relevant, history_text, user_message)  # type: ignore[arg-type]
+        suggested_plan = ""
+        if self.use_planner:
+            suggested_plan = render_plan(build_plan(user_message))
+        return build_prompt(
+            self.prefix,
+            memory_text,
+            relevant,
+            history_text,
+            user_message,
+            suggested_plan=suggested_plan,
+        )  # type: ignore[arg-type]
 
     def refresh_prefix(self, force: bool = False) -> None:
         if self.prefix is not None and not force:

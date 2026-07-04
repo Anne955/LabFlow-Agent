@@ -167,3 +167,16 @@ def _preprocess_step(batch_id: str, experiment_dir: str, inputs: PlannerInputs) 
             "only_qc_passed": inputs.only_qc_passed,
         },
     )
+
+
+def render_plan(plan: ToolPlan) -> str:
+    """Render a ToolPlan as a concise suggested-step list for the prompt."""
+    if not plan.steps:
+        return ""
+    lines = [f"Intent: {plan.intent}", "Suggested steps (advisory — you may deviate):"]
+    for idx, step in enumerate(plan.steps, start=1):
+        detail = step.description or step.name
+        lines.append(f"{idx}. {step.kind}: {detail}")
+    if plan.warnings:
+        lines.append("Warnings: " + "; ".join(plan.warnings))
+    return "\n".join(lines)
