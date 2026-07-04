@@ -65,6 +65,7 @@ GENERATE_REPORT_SCHEMA = {
     "properties": {
         "batch_id": {"type": "string"},
         "findings_path": {"type": "string"},
+        "lang": {"type": "string"},
     },
     "required": ["batch_id"],
 }

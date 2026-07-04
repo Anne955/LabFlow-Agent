@@ -12,6 +12,7 @@ from collections import Counter
 from pathlib import Path
 
 from .errors import ToolExecutionError
+from .report_template import section_title
 from .safety.guard import (
     assert_raw_data_readonly,
     resolve_output_path,
@@ -393,6 +394,7 @@ def tool_summarize_outputs(ctx: ToolContext, args: dict[str, object]) -> ToolRes
 
 def tool_generate_report(ctx: ToolContext, args: dict[str, object]) -> ToolResult:
     batch_id = sanitize_batch_id(str(args["batch_id"]))
+    lang = str(args.get("lang") or "zh")
     qc_path = ctx.path_resolver(str(args["findings_path"])) if args.get("findings_path") else ctx.root / "outputs" / batch_id / "qc_summary.csv"
     if not qc_path.is_file():
         return ToolResult(False, f"QC summary not found: {relpath(ctx, qc_path)}", error_code="not_found", metadata={"batch_id": batch_id})
@@ -414,43 +416,43 @@ def tool_generate_report(ctx: ToolContext, args: dict[str, object]) -> ToolResul
     sections = [
         f"# LabFlow QC Report: {batch_id}",
         "",
-        "## 数据概况",
+        f"## {section_title('data_overview', lang)}",
         f"- Batch ID: {batch_id}",
         f"- QC summary: {relpath(ctx, qc_path)}",
         f"- Total findings: {len(rows)}",
         f"- Abnormal samples: {len(abnormal_samples)}",
         "",
-        "## metadata 检查",
+        f"## {section_title('metadata_check', lang)}",
         _format_checks(by_check, ["missing_metadata_file", "unsupported_metadata_format", "missing_metadata_field", "missing_sample_id", "missing_metadata_value", "duplicate_sample_id"]),
         "",
-        "## 文件一致性检查",
+        f"## {section_title('file_consistency', lang)}",
         _format_checks(by_check, ["missing_spectra_dir", "missing_spectra_file", "file_without_metadata", "invalid_filename"]),
         "",
-        "## 数值异常检查",
+        f"## {section_title('numeric_anomaly', lang)}",
         _format_checks(by_check, ["missing_spectrum_column", "missing_intensity", "non_numeric_intensity", "negative_intensity", "non_numeric_x", "x_not_monotonic", "too_few_points", "extreme_intensity"]),
         "",
-        "## 预处理结果",
+        f"## {section_title('preprocess_results', lang)}",
         f"- Preprocessed CSV files: {len(preprocessed)}",
         f"- Preprocess success: {preprocess_success}",
         f"- Preprocess failed: {preprocess_failed}",
         f"- Preprocess skipped: {preprocess_skipped}",
         *[f"- {relpath(ctx, path)}" for path in preprocessed[:20]],
         "",
-        "## 异常样本列表",
+        f"## {section_title('abnormal_samples', lang)}",
         *(f"- {sample_id}" for sample_id in abnormal_samples[:50]),
         "" if abnormal_samples else "- No abnormal samples recorded.",
         "",
-        "## 输出路径",
+        f"## {section_title('output_paths', lang)}",
         f"- outputs: outputs/{batch_id}/",
         f"- report: {relpath(ctx, report_path)}",
         f"- workflow log: traces/{batch_id}_workflow_log.json",
         "",
-        "## 复核建议",
+        f"## {section_title('review_advice', lang)}",
         "- Critical findings should be reviewed against the raw instrument export before interpretation.",
         "- Re-run preprocessing only with registered scripts and preserve raw data unchanged.",
         "- Treat this report as rule-based QC evidence, not an automated scientific conclusion.",
         "",
-        "## Severity counts",
+        f"## {section_title('severity_counts', lang)}",
         json.dumps(dict(sorted(by_severity.items())), ensure_ascii=False, indent=2),
     ]
     report_path.write_text("\n".join(sections), encoding="utf-8")

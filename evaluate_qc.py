@@ -7,16 +7,9 @@ import json
 from pathlib import Path
 from typing import Any
 
-REQUIRED_REPORT_SECTIONS = [
-    "数据概况",
-    "metadata 检查",
-    "文件一致性检查",
-    "数值异常检查",
-    "预处理结果",
-    "异常样本列表",
-    "输出路径",
-    "复核建议",
-]
+from pico.report_template import required_section_titles
+
+REQUIRED_REPORT_SECTIONS = required_section_titles("zh")
 
 
 def normalize_key(batch_id: str, sample_or_file: str, check: str) -> tuple[str, str, str]:
