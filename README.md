@@ -185,6 +185,17 @@ python evaluate_qc.py \
   --resume-metrics resume_metrics.json
 ```
 
+## New CLI options (2026-07 improvements)
+
+- `--no-planner` — disable the suggested-plan guidance layer (pure LLM-driven mode).
+- `--stream` — stream the final answer to the terminal token-by-token.
+- `--lang zh|en` — report language (default `zh`).
+
+Environment variables:
+- `PICO_MAX_RETRIES`, `PICO_RETRY_BASE_DELAY_MS`, `PICO_RETRY_MAX_DELAY_MS` — provider retry tuning.
+- `PICO_TRUNCATION_STRATEGY` — `priority` (default) or `smart`.
+- `PICO_RUN_INTEGRATION=1` — enable integration tests.
+
 ## Evaluation Metrics
 
 `evaluate_qc.py` 支持单 batch 和多 batch：
