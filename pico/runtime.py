@@ -115,6 +115,10 @@ class Pico:
                 "model_completed",
                 {"provider": response.provider, "model": response.model, "usage": response.usage, "cache": response.cache},
             )
+            for evt in getattr(self.model_client, "retry_events", [])[:]:
+                self.emit_trace(task_state.run_id, "provider_retry", evt)
+            if hasattr(self.model_client, "retry_events"):
+                self.model_client.retry_events.clear()
             parsed = self.parse(response.text)
             self.emit_trace(task_state.run_id, "model_parsed", {"kind": parsed.kind})
             if parsed.kind == "final":

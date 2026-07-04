@@ -119,7 +119,11 @@ class OllamaModelClient(JsonHttpClient):
             "options": {"num_predict": request.max_tokens},
         }
         raw = with_retry(
-            lambda: self._post_json("/api/generate", payload, {}), self.retry_config
+            lambda: self._post_json("/api/generate", payload, {}),
+            self.retry_config,
+            on_retry=lambda attempt, exc: self.retry_events.append(
+                {"attempt": attempt, "error": str(exc)}
+            ),
         )
         text = str(raw.get("response", ""))
         usage = {
@@ -144,7 +148,11 @@ class OpenAICompatibleModelClient(JsonHttpClient):
             "max_tokens": request.max_tokens,
         }
         raw = with_retry(
-            lambda: self._post_json("/v1/chat/completions", payload, headers), self.retry_config
+            lambda: self._post_json("/v1/chat/completions", payload, headers),
+            self.retry_config,
+            on_retry=lambda attempt, exc: self.retry_events.append(
+                {"attempt": attempt, "error": str(exc)}
+            ),
         )
         choices = raw.get("choices") or []
         text = ""
@@ -174,7 +182,11 @@ class AnthropicCompatibleModelClient(JsonHttpClient):
             "messages": [{"role": "user", "content": request.prompt}],
         }
         raw = with_retry(
-            lambda: self._post_json("/v1/messages", payload, headers), self.retry_config
+            lambda: self._post_json("/v1/messages", payload, headers),
+            self.retry_config,
+            on_retry=lambda attempt, exc: self.retry_events.append(
+                {"attempt": attempt, "error": str(exc)}
+            ),
         )
         text_parts = []
         for block in raw.get("content") or []:
