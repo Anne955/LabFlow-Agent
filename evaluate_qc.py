@@ -95,9 +95,16 @@ def load_runtime_block(traces_dir: Path, batch_id: str) -> dict[str, Any] | None
     if not wf_path.is_file():
         return None
     wf = json.loads(wf_path.read_text(encoding="utf-8"))
+    events = wf.get("events")
+    if not isinstance(events, list):
+        events = []
+    event_count = wf.get("event_count") or len(events)
+    duration = wf.get("total_duration_seconds") or sum(
+        float(e.get("duration_seconds") or 0.0) for e in events
+    )
     return {
-        "event_count": wf.get("event_count", 0),
-        "total_duration_seconds": wf.get("total_duration_seconds", 0.0),
+        "event_count": event_count,
+        "total_duration_seconds": float(duration),
     }
 
 

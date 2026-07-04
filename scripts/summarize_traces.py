@@ -31,7 +31,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     root = Path(args.traces_dir)
-    files = sorted(root.glob("*.json"))
+    files = sorted(root.glob("*_workflow_log.json"))
     header = (
         "batch_id,run_status,tool_call_count,provider_call_count,"
         "total_tool_duration_seconds,context_budget_used"
