@@ -189,7 +189,8 @@ python evaluate_qc.py \
 
 - `--no-planner` — disable the suggested-plan guidance layer (pure LLM-driven mode).
 - `--stream` — stream the final answer to the terminal token-by-token.
-- `--lang zh|en` — report language (default `zh`).
+
+Report language is selected via the `generate_report` tool's `lang` argument (the LLM passes `lang: "en"` or `lang: "zh"`, default `zh`); a `--lang` CLI flag is not yet exposed.
 
 Environment variables:
 - `PICO_MAX_RETRIES`, `PICO_RETRY_BASE_DELAY_MS`, `PICO_RETRY_MAX_DELAY_MS` — provider retry tuning.

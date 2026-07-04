@@ -19,7 +19,7 @@
 ### Phase 3: Architecture
 - Optional planner guidance layer (`<suggested_plan>`); disable with `--no-planner`.
 - Report section titles templated (`pico/report_template.py`); `evaluate_qc.py` derives required sections from it.
-- `--lang` flag for report language.
+- Report language selectable via the `generate_report` tool's `lang` argument (`zh`/`en`, default `zh`).
 - Pluggable `TruncationStrategy` (`priority` default, `smart` via `PICO_TRUNCATION_STRATEGY`).
 - Tools reorganized into `pico/tools/` package; old paths are deprecation shims.
 
@@ -33,3 +33,4 @@
 ### Known limitations
 - `--stream` replays the assembled final answer rather than parsing `<final>` from a live token stream.
 - `PICO_TRUNCATION_STRATEGY=smart` is not yet wired into `build_prompt`: the `SmartTruncation` strategy class and `load_truncation_strategy()` loader exist, but `pico/context_manager.py::build_prompt` still constructs a `PriorityTruncation()` directly when the budget is exceeded, so the `smart` strategy currently has no effect on prompt assembly.
+- `--lang` is not yet exposed as a CLI flag; report language is set via the `generate_report` tool argument. A `--lang` CLI option is future work.
