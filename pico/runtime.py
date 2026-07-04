@@ -76,7 +76,7 @@ class Pico:
             **kwargs,
         )
 
-    def ask(self, user_message: str) -> str:
+    def ask(self, user_message: str, stream_callback=None) -> str:
         DurableMemoryStore(self.workspace.repo_root).ensure()
         if not self.secret_env_names:
             self.secret_env_names = collect_secret_env_names()
@@ -127,6 +127,10 @@ class Pico:
             self.emit_trace(task_state.run_id, "model_parsed", {"kind": parsed.kind})
             if parsed.kind == "final":
                 final_answer = str(parsed.payload).strip()
+                if stream_callback is not None and hasattr(self.model_client, "complete_stream"):
+                    # The model already produced the full text; replay it to the callback.
+                    for token in final_answer:
+                        stream_callback(token)
                 task_state.finish_success(final_answer)
                 self.history.append({"role": "assistant", "content": final_answer})
                 break

@@ -53,6 +53,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Disable the suggested-plan guidance layer",
     )
+    parser.add_argument(
+        "--stream",
+        action="store_true",
+        help="Stream the final answer to the terminal token-by-token",
+    )
     return parser
 
 
@@ -164,7 +169,17 @@ def main(argv: list[str] | None = None) -> int:
     agent = build_agent(args)
     if args.repl or not args.prompt:
         return run_repl(agent)
-    answer = agent.ask(args.prompt)
-    if answer:
-        print(answer)
+    if args.stream:
+        buffer = []
+
+        def cb(token):
+            buffer.append(token)
+            print(token, end="", flush=True)
+
+        answer = agent.ask(args.prompt, stream_callback=cb)
+        print()
+    else:
+        answer = agent.ask(args.prompt)
+        if answer:
+            print(answer)
     return 0

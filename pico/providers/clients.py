@@ -42,6 +42,8 @@ class ModelClient(Protocol):
 
     def complete(self, request: ModelRequest) -> ModelResponse: ...
 
+    def complete_stream(self, request: ModelRequest): ...
+
 
 class FakeModelClient:
     provider = "fake"
@@ -58,6 +60,16 @@ class FakeModelClient:
         text = self.script.pop(0) if self.script else "<final>No more scripted responses.</final>"
         self.last_metadata = {"provider": self.provider, "model": self.model, "fake_call": len(self.calls)}
         return ModelResponse(text=text, raw={"text": text}, provider=self.provider, model=self.model)
+
+    def complete_stream(self, request: ModelRequest):
+        self.calls.append(request)
+        text = self.script.pop(0) if self.script else "<final>No more scripted responses.</final>"
+        self.last_metadata = {
+            "provider": self.provider,
+            "model": self.model,
+            "fake_call": len(self.calls),
+        }
+        yield from text
 
 
 class JsonHttpClient:
@@ -106,6 +118,31 @@ class JsonHttpClient:
         except json.JSONDecodeError as exc:
             raise ProviderResponseError(f"non-JSON response from {url}: {raw[:500]}") from exc
 
+    def _stream_post(
+        self,
+        path: str,
+        payload: dict[str, Any],
+        headers: dict[str, str],
+        line_parser,
+    ):
+        """POST with stream:true and yield parsed text deltas via line_parser(line)->str|None."""
+        import urllib.request
+
+        url = self.base_url + path
+        payload = dict(payload)
+        payload["stream"] = True
+        body = json.dumps(payload).encode("utf-8")
+        request = urllib.request.Request(url, data=body, method="POST")
+        request.add_header("content-type", "application/json")
+        for key, value in headers.items():
+            request.add_header(key, value)
+        with urllib.request.urlopen(request, timeout=self.timeout) as response:
+            for raw_line in response:
+                line = raw_line.decode("utf-8", errors="replace").rstrip("\n")
+                delta = line_parser(line)
+                if delta:
+                    yield delta
+
 
 class OllamaModelClient(JsonHttpClient):
     provider = "ollama"
@@ -133,6 +170,26 @@ class OllamaModelClient(JsonHttpClient):
         }
         self.last_metadata = {"provider": self.provider, "model": self.model, **usage}
         return ModelResponse(text=text, raw=raw, usage=usage, provider=self.provider, model=self.model)
+
+    def complete_stream(self, request: ModelRequest):
+        payload = {
+            "model": self.model,
+            "prompt": request.prompt,
+            "stream": True,
+            "raw": False,
+            "options": {"num_predict": request.max_tokens},
+        }
+
+        def parse(line):
+            if not line:
+                return None
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError:
+                return None
+            return str(obj.get("response", "")) or None
+
+        yield from self._stream_post("/api/generate", payload, {}, parse)
 
 
 class OpenAICompatibleModelClient(JsonHttpClient):
@@ -167,6 +224,35 @@ class OpenAICompatibleModelClient(JsonHttpClient):
         }
         self.last_metadata = {"provider": self.provider, "model": self.model, **usage}
         return ModelResponse(text=text, raw=raw, usage=usage, provider=self.provider, model=self.model)
+
+    def complete_stream(self, request: ModelRequest):
+        headers = {}
+        if self.api_key:
+            headers["authorization"] = f"Bearer {self.api_key}"
+        payload = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": request.prompt}],
+            "max_tokens": request.max_tokens,
+            "stream": True,
+        }
+
+        def parse(line):
+            if not line.startswith("data:"):
+                return None
+            data = line[len("data:"):].strip()
+            if data == "[DONE]":
+                return None
+            try:
+                obj = json.loads(data)
+            except json.JSONDecodeError:
+                return None
+            choices = obj.get("choices") or []
+            if not choices:
+                return None
+            delta = choices[0].get("delta") or {}
+            return str(delta.get("content") or "") or None
+
+        yield from self._stream_post("/v1/chat/completions", payload, headers, parse)
 
 
 class AnthropicCompatibleModelClient(JsonHttpClient):
@@ -207,3 +293,29 @@ class AnthropicCompatibleModelClient(JsonHttpClient):
         }
         self.last_metadata = {"provider": self.provider, "model": self.model, **usage, **cache}
         return ModelResponse(text=text, raw=raw, usage=usage, cache=cache, provider=self.provider, model=self.model)
+
+    def complete_stream(self, request: ModelRequest):
+        headers = {"anthropic-version": "2023-06-01"}
+        if self.api_key:
+            headers["x-api-key"] = self.api_key
+        payload = {
+            "model": self.model,
+            "max_tokens": request.max_tokens,
+            "messages": [{"role": "user", "content": request.prompt}],
+            "stream": True,
+        }
+
+        def parse(line):
+            if not line.startswith("data:"):
+                return None
+            data = line[len("data:"):].strip()
+            try:
+                obj = json.loads(data)
+            except json.JSONDecodeError:
+                return None
+            if obj.get("type") != "content_block_delta":
+                return None
+            delta = obj.get("delta") or {}
+            return str(delta.get("text") or "") or None
+
+        yield from self._stream_post("/v1/messages", payload, headers, parse)
