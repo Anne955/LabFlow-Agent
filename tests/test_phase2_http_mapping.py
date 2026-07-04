@@ -11,10 +11,19 @@ from pico.errors import (
     ProviderResponseError,
 )
 from pico.providers.clients import ModelRequest, OpenAICompatibleModelClient
+from pico.providers.retry import RetryConfig
 
 
 def make_client():
-    return OpenAICompatibleModelClient(model="m", base_url="http://x", api_key="k", timeout=5)
+    # max_retries=0 so retryable errors propagate on the first attempt without
+    # sleeping. These tests assert error MAPPING, not retry behavior.
+    return OpenAICompatibleModelClient(
+        model="m",
+        base_url="http://x",
+        api_key="k",
+        timeout=5,
+        retry_config=RetryConfig(max_retries=0),
+    )
 
 
 class HttpMappingTests(unittest.TestCase):
