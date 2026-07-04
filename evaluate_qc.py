@@ -90,6 +90,17 @@ def load_trace_duration(trace_path: Path | None) -> float | None:
     return None
 
 
+def load_runtime_block(traces_dir: Path, batch_id: str) -> dict[str, Any] | None:
+    wf_path = traces_dir / f"{batch_id}_workflow_log.json"
+    if not wf_path.is_file():
+        return None
+    wf = json.loads(wf_path.read_text(encoding="utf-8"))
+    return {
+        "event_count": wf.get("event_count", 0),
+        "total_duration_seconds": wf.get("total_duration_seconds", 0.0),
+    }
+
+
 def file_sha256(path: Path) -> str:
     digest = hashlib.sha256()
     digest.update(path.read_bytes())
@@ -246,12 +257,21 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", default=None)
     parser.add_argument("--errors", default=None)
     parser.add_argument("--resume-metrics", default=None)
+    parser.add_argument(
+        "--with-runtime-metrics",
+        action="store_true",
+        help="Append per-batch runtime metrics from workflow logs",
+    )
     args = parser.parse_args(argv)
     root = Path.cwd()
     if args.pred:
         if not args.labels:
             parser.error("--labels is required with --pred")
         result = evaluate_single(Path(args.pred), Path(args.labels), Path(args.report) if args.report else None, Path(args.trace) if args.trace else None, root)
+        if args.with_runtime_metrics:
+            runtime = load_runtime_block(root / args.traces_dir, result["batch_id"])
+            if runtime is not None:
+                result["runtime"] = runtime
         errors = result.pop("errors")
         if args.errors:
             write_errors(Path(args.errors), errors)
@@ -264,6 +284,11 @@ def main(argv: list[str] | None = None) -> int:
     if not args.pred_dir or not args.labels_dir:
         parser.error("either --pred/--labels or --pred-dir/--labels-dir is required")
     summary = evaluate_multi(Path(args.pred_dir), Path(args.labels_dir), Path(args.reports_dir), Path(args.traces_dir), root)
+    if args.with_runtime_metrics:
+        for batch in summary["per_batch"]:
+            runtime = load_runtime_block(root / args.traces_dir, batch["batch_id"])
+            if runtime is not None:
+                batch["runtime"] = runtime
     errors = summary.pop("errors")
     if args.output:
         Path(args.output).write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
