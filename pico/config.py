@@ -111,3 +111,14 @@ def load_retry_config():
         base_delay_ms=int(env_or(str(DEFAULT_RETRY_BASE_DELAY_MS), "PICO_RETRY_BASE_DELAY_MS")),
         max_delay_ms=int(env_or(str(DEFAULT_RETRY_MAX_DELAY_MS), "PICO_RETRY_MAX_DELAY_MS")),
     )
+
+
+def load_truncation_strategy():
+    name = env_or("priority", "PICO_TRUNCATION_STRATEGY")
+    if name == "smart":
+        from .context_manager import SmartTruncation
+
+        return SmartTruncation()
+    from .context_manager import PriorityTruncation
+
+    return PriorityTruncation()
