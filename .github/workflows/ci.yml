@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff>=0.4.4
+      # TODO(lint-cleanup): the repo currently has 262 pre-existing ruff
+      # violations and 35 files needing reformatting, deferred to a dedicated
+      # lint-cleanup task. `--exit-zero` / `|| true` lets CI stay green while
+      # still surfacing the debt in logs. Drop these once that cleanup lands so
+      # lint becomes a hard gate again.
+      - run: ruff check . --exit-zero
+      - run: ruff format --check . || true
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e ".[dev]"
+      - run: pytest tests/ -v -W ignore::DeprecationWarning
+
+  safety:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: pytest tests/test_labflow_guard.py tests/test_safety_boundaries.py tests/test_tools_safety.py tests/test_phase1_executor_tiers.py tests/test_phase1_rawdata_readonly.py tests/test_phase1_labflow_write_guard.py -v
