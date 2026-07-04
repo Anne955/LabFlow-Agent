@@ -1,99 +1,21 @@
-"""Generic pico-harness tools and tool primitives.
+"""Generic pico-harness tools and the generic tool registry.
 
-This module defines the generic agent tool registry (list_files, read_file,
-search, run_shell, write_file, patch_file, delegate) plus the shared
-ToolSpec/ToolResult primitives. The generic registry is the safety test bed
-exercised by tests/test_tools_safety.py and is intentionally separate from the
-LabFlow registry in pico/tool_registry.py, which is what the LabFlow runtime
-actually exposes (safety-by-default: no arbitrary shell/file-write tools).
+These are the safety-test-bed tools (list_files, read_file, search, run_shell,
+write_file, patch_file, delegate) exercised by tests/test_tools_safety.py. They
+are intentionally separate from the LabFlow registry in pico.tools.registry,
+which is what the LabFlow runtime actually exposes (safety-by-default: no
+arbitrary shell/file-write tools).
 """
 from __future__ import annotations
 
-import json
-import os
 import re
 import subprocess
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
-from .config import DEFAULT_TOOL_OUTPUT_LIMIT, IGNORED_DIRS
-from .tool_context import ToolContext
-from .workspace import clip, file_freshness, iter_workspace_files
-
-
-@dataclass
-class ToolResult:
-    ok: bool
-    text: str
-    metadata: dict[str, Any] = field(default_factory=dict)
-    error_code: str | None = None
-    affected_paths: list[str] = field(default_factory=list)
-    workspace_changed: bool = False
-
-    def to_observation(self, limit: int = DEFAULT_TOOL_OUTPUT_LIMIT) -> str:
-        status = "ok" if self.ok else f"error:{self.error_code or 'tool_error'}"
-        return f"[{status}]\n" + clip(self.text, limit)
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "ok": self.ok,
-            "text": self.text,
-            "metadata": self.metadata,
-            "error_code": self.error_code,
-            "affected_paths": self.affected_paths,
-            "workspace_changed": self.workspace_changed,
-        }
-
-
-@dataclass
-class ToolSpec:
-    name: str
-    description: str
-    schema: dict[str, Any]
-    risky: bool
-    runner: Callable[[ToolContext, dict[str, Any]], ToolResult]
-
-
-def build_tool_registry(context: ToolContext) -> dict[str, ToolSpec]:
-    registry = {
-        "list_files": ToolSpec("list_files", "List files under a workspace path.", LIST_FILES_SCHEMA, False, tool_list_files),
-        "read_file": ToolSpec("read_file", "Read a text file with line numbers.", READ_FILE_SCHEMA, False, tool_read_file),
-        "search": ToolSpec("search", "Search text files with a regular expression.", SEARCH_SCHEMA, False, tool_search),
-        "run_shell": ToolSpec("run_shell", "Run a shell command in the workspace.", RUN_SHELL_SCHEMA, True, tool_run_shell),
-        "write_file": ToolSpec("write_file", "Create or overwrite a file.", WRITE_FILE_SCHEMA, True, tool_write_file),
-        "patch_file": ToolSpec("patch_file", "Replace exactly one text occurrence in a file.", PATCH_FILE_SCHEMA, True, tool_patch_file),
-    }
-    if context.depth < context.max_depth and context.spawn_delegate is not None:
-        registry["delegate"] = ToolSpec("delegate", "Delegate a read-only subtask to a child agent.", DELEGATE_SCHEMA, False, tool_delegate)
-    return registry
-
-
-def validate_tool_args(schema: dict[str, Any], args: dict[str, Any]) -> str | None:
-    required = schema.get("required", [])
-    for key in required:
-        if key not in args:
-            return f"missing required argument: {key}"
-    properties = schema.get("properties", {})
-    for key, value in args.items():
-        spec = properties.get(key)
-        if spec is None:
-            return f"unexpected argument: {key}"
-        expected = spec.get("type")
-        if expected == "string" and not isinstance(value, str):
-            return f"argument {key} must be a string"
-        if expected == "integer" and not isinstance(value, int):
-            return f"argument {key} must be an integer"
-        if expected == "boolean" and not isinstance(value, bool):
-            return f"argument {key} must be a boolean"
-    return None
-
-
-def relpath(ctx: ToolContext, path: Path) -> str:
-    try:
-        return path.relative_to(ctx.root).as_posix()
-    except ValueError:
-        return str(path)
+from ..config import DEFAULT_TOOL_OUTPUT_LIMIT, IGNORED_DIRS
+from ..tool_context import ToolContext
+from ..workspace import clip, file_freshness, iter_workspace_files
+from .base import ToolResult, ToolSpec, relpath
 
 
 def tool_list_files(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
@@ -242,25 +164,15 @@ PATCH_FILE_SCHEMA = {"type": "object", "properties": {"path": {"type": "string"}
 DELEGATE_SCHEMA = {"type": "object", "properties": {"task": {"type": "string"}, "max_steps": {"type": "integer"}}, "required": ["task"]}
 
 
-def tool_signature(registry: dict[str, ToolSpec]) -> str:
-    data = {name: {"schema": spec.schema, "risky": spec.risky} for name, spec in sorted(registry.items())}
-    return json.dumps(data, sort_keys=True)
-
-
-def shell_command_signature(name: str, args: dict[str, Any]) -> str:
-    return json.dumps({"name": name, "args": args}, sort_keys=True, ensure_ascii=False)
-
-
-def workspace_snapshot(root: Path) -> dict[str, tuple[int, int]]:
-    snapshot: dict[str, tuple[int, int]] = {}
-    for current, dirs, files in os.walk(root):
-        dirs[:] = [d for d in dirs if d not in IGNORED_DIRS]
-        for file_name in files:
-            path = Path(current) / file_name
-            try:
-                rel = path.relative_to(root).as_posix()
-                stat = path.stat()
-            except OSError:
-                continue
-            snapshot[rel] = (int(stat.st_mtime_ns), int(stat.st_size))
-    return snapshot
+def build_tool_registry(context: ToolContext) -> dict[str, ToolSpec]:
+    registry = {
+        "list_files": ToolSpec("list_files", "List files under a workspace path.", LIST_FILES_SCHEMA, False, tool_list_files),
+        "read_file": ToolSpec("read_file", "Read a text file with line numbers.", READ_FILE_SCHEMA, False, tool_read_file),
+        "search": ToolSpec("search", "Search text files with a regular expression.", SEARCH_SCHEMA, False, tool_search),
+        "run_shell": ToolSpec("run_shell", "Run a shell command in the workspace.", RUN_SHELL_SCHEMA, True, tool_run_shell),
+        "write_file": ToolSpec("write_file", "Create or overwrite a file.", WRITE_FILE_SCHEMA, True, tool_write_file),
+        "patch_file": ToolSpec("patch_file", "Replace exactly one text occurrence in a file.", PATCH_FILE_SCHEMA, True, tool_patch_file),
+    }
+    if context.depth < context.max_depth and context.spawn_delegate is not None:
+        registry["delegate"] = ToolSpec("delegate", "Delegate a read-only subtask to a child agent.", DELEGATE_SCHEMA, False, tool_delegate)
+    return registry

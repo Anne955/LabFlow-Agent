@@ -6,7 +6,8 @@ from typing import Any
 
 from .errors import SafetyViolationError, ToolExecutionError
 from .tool_context import ToolContext
-from .tools import ToolResult, ToolSpec, shell_command_signature, validate_tool_args
+from .tools import ToolResult, ToolSpec
+from .tools.base import shell_command_signature, validate_tool_args
 
 ApprovalCallback = Callable[[ToolSpec, dict[str, Any]], bool]
 

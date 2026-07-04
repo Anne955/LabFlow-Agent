@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 from pico.security import safe_shell_env
 from pico.tool_context import ToolContext
 from pico.tool_executor import ToolExecutor
-from pico.tools import build_tool_registry as build_legacy_tool_registry
+from pico.tools import build_generic_tool_registry as build_legacy_tool_registry
 from pico.workspace import resolve_in_workspace
 
 

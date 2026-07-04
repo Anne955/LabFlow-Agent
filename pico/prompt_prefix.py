@@ -4,7 +4,8 @@ import hashlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from .tools import ToolSpec, tool_signature
+from .tools import ToolSpec
+from .tools.base import tool_signature
 from .workspace import WorkspaceContext
 
 

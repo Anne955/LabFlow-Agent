@@ -21,7 +21,7 @@ labflow-agent = "pico.cli:main"
 pico = "pico.cli:main"
 
 [tool.setuptools]
-packages = ["pico", "pico.providers", "pico.features", "pico.evaluation", "pico.safety", "pico.agent"]
+packages = ["pico", "pico.providers", "pico.features", "pico.evaluation", "pico.safety", "pico.agent", "pico.tools"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
