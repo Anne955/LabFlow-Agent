@@ -109,6 +109,8 @@ class Pico:
             except ModelProviderError as exc:
                 task_state.finish_failed("provider_error", str(exc))
                 self.emit_trace(task_state.run_id, "model_error", {"error": str(exc)})
+                if hasattr(self.model_client, "retry_events"):
+                    self.model_client.retry_events.clear()
                 break
             self.emit_trace(
                 task_state.run_id,
