@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from ..errors import (
-    ModelProviderError,
+    ModelProviderError,  # noqa: F401  re-exported via pico.providers
     ProviderAuthError,  # noqa: F401  re-exported for provider HTTP-status mapping (Phase 2 Task 2)
     ProviderConnectionError,  # noqa: F401  re-exported for provider HTTP-status mapping (Phase 2 Task 2)
     ProviderRateLimitError,  # noqa: F401  re-exported for provider HTTP-status mapping (Phase 2 Task 2)
@@ -82,13 +82,19 @@ class JsonHttpClient:
                 raw = response.read().decode("utf-8")
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")
-            raise ModelProviderError(f"HTTP {exc.code} from {url}: {detail}") from exc
-        except OSError as exc:
-            raise ModelProviderError(f"request failed for {url}: {exc}") from exc
+            if exc.code == 429:
+                raise ProviderRateLimitError(f"HTTP 429 from {url}: {detail}") from exc
+            if exc.code in (401, 403):
+                raise ProviderAuthError(f"HTTP {exc.code} from {url}: {detail}") from exc
+            if 500 <= exc.code < 600:
+                raise ProviderConnectionError(f"HTTP {exc.code} from {url}: {detail}") from exc
+            raise ProviderResponseError(f"HTTP {exc.code} from {url}: {detail}") from exc
+        except (OSError, TimeoutError) as exc:
+            raise ProviderConnectionError(f"request failed for {url}: {exc}") from exc
         try:
             return json.loads(raw)
         except json.JSONDecodeError as exc:
-            raise ModelProviderError(f"non-JSON response from {url}: {raw[:500]}") from exc
+            raise ProviderResponseError(f"non-JSON response from {url}: {raw[:500]}") from exc
 
 
 class OllamaModelClient(JsonHttpClient):
