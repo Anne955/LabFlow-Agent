@@ -71,3 +71,23 @@ def write_workflow_log(root: Path, batch_id: str, log: dict[str, Any]) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(log, indent=2, ensure_ascii=False), encoding="utf-8")
     return path
+
+
+def build_run_summary(
+    tool_summaries: list[dict[str, Any]],
+    run_status: str,
+    provider_metadata: dict[str, Any],
+    prompt_metadata: dict[str, Any],
+) -> dict[str, Any]:
+    durations = [float(item.get("duration_seconds") or 0.0) for item in tool_summaries]
+    return {
+        "run_status": run_status,
+        "tool_call_count": len(tool_summaries),
+        "provider_call_count": int(
+            provider_metadata.get("fake_call") or provider_metadata.get("calls") or 0
+        )
+        or None,
+        "total_tool_duration_seconds": sum(durations),
+        "context_budget_used": int(prompt_metadata.get("prompt_chars") or 0),
+        "section_chars": prompt_metadata.get("section_chars", {}),
+    }

@@ -21,7 +21,7 @@ from .tool_executor import ToolExecutor
 from .tools import ToolResult
 from .tool_registry import build_tool_registry
 from .workspace import WorkspaceContext, resolve_in_workspace
-from .workflow_trace import build_workflow_log, write_workflow_log
+from .workflow_trace import build_run_summary, build_workflow_log, write_workflow_log
 
 
 @dataclass
@@ -181,6 +181,16 @@ class Pico:
         self.run_store.write_task_state(task_state)
         report = self.build_report(task_state)
         self.run_store.write_report(task_state.run_id, report)
+        self.emit_trace(
+            task_state.run_id,
+            "run_summary",
+            build_run_summary(
+                self.tool_summaries,
+                task_state.status,
+                getattr(self.model_client, "last_metadata", {}),
+                self.last_prompt_metadata,
+            ),
+        )
         self.emit_trace(task_state.run_id, "run_finished", report)
         if self.current_batch_id:
             self._write_workflow_log_from_trace(task_state.run_id, self.current_batch_id)
