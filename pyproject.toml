@@ -26,6 +26,9 @@ packages = ["pico", "pico.providers", "pico.features", "pico.evaluation", "pico.
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "integration: provider contract tests (deselect with '-m \"not integration\"'; run with PICO_RUN_INTEGRATION=1)",
+]
 
 [tool.ruff]
 line-length = 100
