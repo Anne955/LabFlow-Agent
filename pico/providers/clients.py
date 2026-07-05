@@ -97,6 +97,7 @@ class JsonHttpClient:
         self.retry_config = retry_config or RetryConfig()
         self.retry_events: list[dict] = []
         self.last_metadata: dict[str, Any] = {}
+        self._call_count: int = 0
 
     def _post_json(
         self, path: str, payload: dict[str, Any], headers: dict[str, str]
@@ -156,6 +157,7 @@ class OllamaModelClient(JsonHttpClient):
     provider = "ollama"
 
     def complete(self, request: ModelRequest) -> ModelResponse:
+        self._call_count += 1
         payload = {
             "model": self.model,
             "prompt": request.prompt,
@@ -176,7 +178,12 @@ class OllamaModelClient(JsonHttpClient):
             "output_tokens": raw.get("eval_count", 0),
             "total_duration": raw.get("total_duration", 0),
         }
-        self.last_metadata = {"provider": self.provider, "model": self.model, **usage}
+        self.last_metadata = {
+            "provider": self.provider,
+            "model": self.model,
+            "calls": self._call_count,
+            **usage,
+        }
         return ModelResponse(
             text=text, raw=raw, usage=usage, provider=self.provider, model=self.model
         )
@@ -206,6 +213,7 @@ class OpenAICompatibleModelClient(JsonHttpClient):
     provider = "openai-compatible"
 
     def complete(self, request: ModelRequest) -> ModelResponse:
+        self._call_count += 1
         headers = {}
         if self.api_key:
             headers["authorization"] = f"Bearer {self.api_key}"
@@ -232,7 +240,12 @@ class OpenAICompatibleModelClient(JsonHttpClient):
             "output_tokens": raw_usage.get("completion_tokens", 0),
             "total_tokens": raw_usage.get("total_tokens", 0),
         }
-        self.last_metadata = {"provider": self.provider, "model": self.model, **usage}
+        self.last_metadata = {
+            "provider": self.provider,
+            "model": self.model,
+            "calls": self._call_count,
+            **usage,
+        }
         return ModelResponse(
             text=text, raw=raw, usage=usage, provider=self.provider, model=self.model
         )
@@ -271,6 +284,7 @@ class AnthropicCompatibleModelClient(JsonHttpClient):
     provider = "anthropic-compatible"
 
     def complete(self, request: ModelRequest) -> ModelResponse:
+        self._call_count += 1
         headers = {"anthropic-version": "2023-06-01"}
         if self.api_key:
             headers["x-api-key"] = self.api_key
@@ -303,7 +317,13 @@ class AnthropicCompatibleModelClient(JsonHttpClient):
             "cache_read_tokens": usage["cache_read_input_tokens"],
             "cache_hit": bool(usage["cache_read_input_tokens"]),
         }
-        self.last_metadata = {"provider": self.provider, "model": self.model, **usage, **cache}
+        self.last_metadata = {
+            "provider": self.provider,
+            "model": self.model,
+            "calls": self._call_count,
+            **usage,
+            **cache,
+        }
         return ModelResponse(
             text=text, raw=raw, usage=usage, cache=cache, provider=self.provider, model=self.model
         )
