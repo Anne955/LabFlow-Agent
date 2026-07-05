@@ -14,9 +14,7 @@ from pico.run_store import RunStore, SessionStore
 from pico.runtime import Pico
 from pico.workspace import WorkspaceContext
 
-_FINAL_RESPONSE = (
-    b'{"choices":[{"message":{"content":"<final>done</final>"}}],"usage":{}}'
-)
+_FINAL_RESPONSE = b'{"choices":[{"message":{"content":"<final>done</final>"}}],"usage":{}}'
 
 
 class RetryTraceTests(unittest.TestCase):
@@ -25,10 +23,16 @@ class RetryTraceTests(unittest.TestCase):
             root = Path(d)
             (root / "data").mkdir()
             client = OpenAICompatibleModelClient(
-                model="m", base_url="http://x", api_key="k", timeout=5,
+                model="m",
+                base_url="http://x",
+                api_key="k",
+                timeout=5,
                 retry_config=RetryConfig(
-                    max_retries=2, base_delay_ms=1, max_delay_ms=2,
-                    sleep=lambda _s: None, rng=lambda: 0,
+                    max_retries=2,
+                    base_delay_ms=1,
+                    max_delay_ms=2,
+                    sleep=lambda _s: None,
+                    rng=lambda: 0,
                 ),
             )
             pico = Pico(
@@ -43,9 +47,7 @@ class RetryTraceTests(unittest.TestCase):
             def fake_urlopen(req, timeout):
                 calls["n"] += 1
                 if calls["n"] < 2:
-                    raise urllib.error.HTTPError(
-                        "http://x", 500, "err", {}, io.BytesIO(b"")
-                    )
+                    raise urllib.error.HTTPError("http://x", 500, "err", {}, io.BytesIO(b""))
 
                 class R:
                     def read(self):
@@ -63,9 +65,7 @@ class RetryTraceTests(unittest.TestCase):
                 pico.ask("hi")
 
             run_dirs = sorted((root / ".pico" / "runs").iterdir())
-            trace_lines = (run_dirs[-1] / "trace.jsonl").read_text(
-                encoding="utf-8"
-            ).splitlines()
+            trace_lines = (run_dirs[-1] / "trace.jsonl").read_text(encoding="utf-8").splitlines()
             types = [json.loads(line)["type"] for line in trace_lines if line.strip()]
             self.assertIn("provider_retry", types)
 

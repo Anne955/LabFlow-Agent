@@ -18,7 +18,7 @@ FULL_SCRIPT = [
     '<tool>{"name":"summarize_outputs","args":{"batch_id":"batch_demo_001"}}</tool>',
     '<tool>{"name":"generate_report","args":{"batch_id":"batch_demo_001"}}</tool>',
     '<tool>{"name":"export_workflow_log","args":{"batch_id":"batch_demo_001"}}</tool>',
-    '<final>done</final>',
+    "<final>done</final>",
 ]
 
 
@@ -32,7 +32,9 @@ def seed_batch(root: Path) -> None:
     scripts = root / "scripts"
     scripts.mkdir()
     source_script = Path(__file__).resolve().parents[1] / "scripts" / "normalize_csv.py"
-    (scripts / "normalize_csv.py").write_text(source_script.read_text(encoding="utf-8"), encoding="utf-8")
+    (scripts / "normalize_csv.py").write_text(
+        source_script.read_text(encoding="utf-8"), encoding="utf-8"
+    )
 
 
 class WorkflowTraceTests(unittest.TestCase):

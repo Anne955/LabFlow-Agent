@@ -36,7 +36,9 @@ class LabFlowToolsTests(unittest.TestCase):
             (batch / "metadata.csv").write_text("sample_id,method\ns1,raman\n", encoding="utf-8")
             (batch / "instrument_log.txt").write_text("ok", encoding="utf-8")
             (batch / "spectra" / "s1_raman.csv").write_text("x,intensity\n1,2\n", encoding="utf-8")
-            result = tool_scan_experiment_dir(make_context(root), {"experiment_dir": "data/batch_demo_001"})
+            result = tool_scan_experiment_dir(
+                make_context(root), {"experiment_dir": "data/batch_demo_001"}
+            )
             self.assertTrue(result.ok)
             self.assertEqual(result.metadata["batch_id"], "batch_demo_001")
             self.assertEqual(result.metadata["spectra_file_count"], 1)
@@ -84,11 +86,17 @@ class LabFlowToolsTests(unittest.TestCase):
                 ],
                 ["x", "intensity"],
             )
-            write_csv(spectra / "s2_raman.csv", [{"x": 2, "intensity": 1}, {"x": 1, "intensity": 2}], ["x", "intensity"])
+            write_csv(
+                spectra / "s2_raman.csv",
+                [{"x": 2, "intensity": 1}, {"x": 1, "intensity": 2}],
+                ["x", "intensity"],
+            )
             write_csv(spectra / "orphan_raman.csv", [{"x": 1, "intensity": 1}], ["x", "intensity"])
             write_csv(spectra / "badname.csv", [{"x": 1}], ["x"])
 
-            result = tool_quality_check(make_context(root), {"experiment_dir": "data/batch_demo_001"})
+            result = tool_quality_check(
+                make_context(root), {"experiment_dir": "data/batch_demo_001"}
+            )
             self.assertTrue(result.ok)
             qc_path = root / "outputs" / "batch_demo_001" / "qc_summary.csv"
             self.assertTrue(qc_path.is_file())

@@ -6,6 +6,7 @@ are intentionally separate from the LabFlow registry in pico.tools.registry,
 which is what the LabFlow runtime actually exposes (safety-by-default: no
 arbitrary shell/file-write tools).
 """
+
 from __future__ import annotations
 
 import re
@@ -102,7 +103,17 @@ def tool_run_shell(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
             check=False,
         )
     except subprocess.TimeoutExpired as exc:
-        return ToolResult(False, f"command timed out after {timeout}s", error_code="timeout", metadata={"command": command, "timeout": timeout, "stdout": exc.stdout, "stderr": exc.stderr})
+        return ToolResult(
+            False,
+            f"command timed out after {timeout}s",
+            error_code="timeout",
+            metadata={
+                "command": command,
+                "timeout": timeout,
+                "stdout": exc.stdout,
+                "stderr": exc.stderr,
+            },
+        )
     output = ""
     if completed.stdout:
         output += completed.stdout
@@ -110,7 +121,12 @@ def tool_run_shell(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
         output += ("\n[stderr]\n" if output else "[stderr]\n") + completed.stderr
     if not output:
         output = f"command exited with {completed.returncode} and no output"
-    return ToolResult(completed.returncode == 0, clip(output, DEFAULT_TOOL_OUTPUT_LIMIT), error_code=None if completed.returncode == 0 else "nonzero_exit", metadata={"command": command, "returncode": completed.returncode})
+    return ToolResult(
+        completed.returncode == 0,
+        clip(output, DEFAULT_TOOL_OUTPUT_LIMIT),
+        error_code=None if completed.returncode == 0 else "nonzero_exit",
+        metadata={"command": command, "returncode": completed.returncode},
+    )
 
 
 def tool_write_file(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
@@ -122,7 +138,13 @@ def tool_write_file(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
     except OSError as exc:
         return ToolResult(False, str(exc), error_code="io_error")
     relative = relpath(ctx, path)
-    return ToolResult(True, f"wrote {len(content.encode('utf-8'))} bytes to {relative}", metadata={"path": relative, "freshness": file_freshness(path)}, affected_paths=[relative], workspace_changed=True)
+    return ToolResult(
+        True,
+        f"wrote {len(content.encode('utf-8'))} bytes to {relative}",
+        metadata={"path": relative, "freshness": file_freshness(path)},
+        affected_paths=[relative],
+        workspace_changed=True,
+    )
 
 
 def tool_patch_file(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
@@ -137,14 +159,22 @@ def tool_patch_file(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
         return ToolResult(False, str(exc), error_code="io_error")
     count = content.count(old_text)
     if count != 1:
-        return ToolResult(False, f"old_text must appear exactly once; found {count}", error_code="ambiguous_patch")
+        return ToolResult(
+            False, f"old_text must appear exactly once; found {count}", error_code="ambiguous_patch"
+        )
     updated = content.replace(old_text, new_text, 1)
     try:
         path.write_text(updated, encoding="utf-8")
     except OSError as exc:
         return ToolResult(False, str(exc), error_code="io_error")
     relative = relpath(ctx, path)
-    return ToolResult(True, f"patched {relative}", metadata={"path": relative, "freshness": file_freshness(path)}, affected_paths=[relative], workspace_changed=True)
+    return ToolResult(
+        True,
+        f"patched {relative}",
+        metadata={"path": relative, "freshness": file_freshness(path)},
+        affected_paths=[relative],
+        workspace_changed=True,
+    )
 
 
 def tool_delegate(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
@@ -155,24 +185,103 @@ def tool_delegate(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
     return ctx.spawn_delegate(task, max_steps)
 
 
-LIST_FILES_SCHEMA = {"type": "object", "properties": {"path": {"type": "string"}, "max_entries": {"type": "integer"}}, "required": []}
-READ_FILE_SCHEMA = {"type": "object", "properties": {"path": {"type": "string"}, "start_line": {"type": "integer"}, "max_lines": {"type": "integer"}}, "required": ["path"]}
-SEARCH_SCHEMA = {"type": "object", "properties": {"pattern": {"type": "string"}, "path": {"type": "string"}, "glob": {"type": "string"}, "max_matches": {"type": "integer"}}, "required": ["pattern"]}
-RUN_SHELL_SCHEMA = {"type": "object", "properties": {"command": {"type": "string"}, "timeout": {"type": "integer"}}, "required": ["command"]}
-WRITE_FILE_SCHEMA = {"type": "object", "properties": {"path": {"type": "string"}, "content": {"type": "string"}}, "required": ["path", "content"]}
-PATCH_FILE_SCHEMA = {"type": "object", "properties": {"path": {"type": "string"}, "old_text": {"type": "string"}, "new_text": {"type": "string"}}, "required": ["path", "old_text", "new_text"]}
-DELEGATE_SCHEMA = {"type": "object", "properties": {"task": {"type": "string"}, "max_steps": {"type": "integer"}}, "required": ["task"]}
+LIST_FILES_SCHEMA = {
+    "type": "object",
+    "properties": {"path": {"type": "string"}, "max_entries": {"type": "integer"}},
+    "required": [],
+}
+READ_FILE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "path": {"type": "string"},
+        "start_line": {"type": "integer"},
+        "max_lines": {"type": "integer"},
+    },
+    "required": ["path"],
+}
+SEARCH_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "pattern": {"type": "string"},
+        "path": {"type": "string"},
+        "glob": {"type": "string"},
+        "max_matches": {"type": "integer"},
+    },
+    "required": ["pattern"],
+}
+RUN_SHELL_SCHEMA = {
+    "type": "object",
+    "properties": {"command": {"type": "string"}, "timeout": {"type": "integer"}},
+    "required": ["command"],
+}
+WRITE_FILE_SCHEMA = {
+    "type": "object",
+    "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+    "required": ["path", "content"],
+}
+PATCH_FILE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "path": {"type": "string"},
+        "old_text": {"type": "string"},
+        "new_text": {"type": "string"},
+    },
+    "required": ["path", "old_text", "new_text"],
+}
+DELEGATE_SCHEMA = {
+    "type": "object",
+    "properties": {"task": {"type": "string"}, "max_steps": {"type": "integer"}},
+    "required": ["task"],
+}
 
 
 def build_tool_registry(context: ToolContext) -> dict[str, ToolSpec]:
     registry = {
-        "list_files": ToolSpec("list_files", "List files under a workspace path.", LIST_FILES_SCHEMA, False, tool_list_files),
-        "read_file": ToolSpec("read_file", "Read a text file with line numbers.", READ_FILE_SCHEMA, False, tool_read_file),
-        "search": ToolSpec("search", "Search text files with a regular expression.", SEARCH_SCHEMA, False, tool_search),
-        "run_shell": ToolSpec("run_shell", "Run a shell command in the workspace.", RUN_SHELL_SCHEMA, True, tool_run_shell),
-        "write_file": ToolSpec("write_file", "Create or overwrite a file.", WRITE_FILE_SCHEMA, True, tool_write_file),
-        "patch_file": ToolSpec("patch_file", "Replace exactly one text occurrence in a file.", PATCH_FILE_SCHEMA, True, tool_patch_file),
+        "list_files": ToolSpec(
+            "list_files",
+            "List files under a workspace path.",
+            LIST_FILES_SCHEMA,
+            False,
+            tool_list_files,
+        ),
+        "read_file": ToolSpec(
+            "read_file",
+            "Read a text file with line numbers.",
+            READ_FILE_SCHEMA,
+            False,
+            tool_read_file,
+        ),
+        "search": ToolSpec(
+            "search",
+            "Search text files with a regular expression.",
+            SEARCH_SCHEMA,
+            False,
+            tool_search,
+        ),
+        "run_shell": ToolSpec(
+            "run_shell",
+            "Run a shell command in the workspace.",
+            RUN_SHELL_SCHEMA,
+            True,
+            tool_run_shell,
+        ),
+        "write_file": ToolSpec(
+            "write_file", "Create or overwrite a file.", WRITE_FILE_SCHEMA, True, tool_write_file
+        ),
+        "patch_file": ToolSpec(
+            "patch_file",
+            "Replace exactly one text occurrence in a file.",
+            PATCH_FILE_SCHEMA,
+            True,
+            tool_patch_file,
+        ),
     }
     if context.depth < context.max_depth and context.spawn_delegate is not None:
-        registry["delegate"] = ToolSpec("delegate", "Delegate a read-only subtask to a child agent.", DELEGATE_SCHEMA, False, tool_delegate)
+        registry["delegate"] = ToolSpec(
+            "delegate",
+            "Delegate a read-only subtask to a child agent.",
+            DELEGATE_SCHEMA,
+            False,
+            tool_delegate,
+        )
     return registry

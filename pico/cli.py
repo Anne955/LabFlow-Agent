@@ -33,14 +33,22 @@ from .workspace import WorkspaceContext
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="LabFlow Agent local scientific-data workflow assistant")
+    parser = argparse.ArgumentParser(
+        description="LabFlow Agent local scientific-data workflow assistant"
+    )
     parser.add_argument("prompt", nargs="?", help="User request for one-shot mode")
     parser.add_argument("--cwd", default=".", help="Workspace directory")
-    parser.add_argument("--provider", choices=["fake", "ollama", "openai-compatible", "anthropic-compatible"], default=None)
+    parser.add_argument(
+        "--provider",
+        choices=["fake", "ollama", "openai-compatible", "anthropic-compatible"],
+        default=None,
+    )
     parser.add_argument("--model", default=None)
     parser.add_argument("--base-url", default=None)
     parser.add_argument("--host", default=None, help="Alias for Ollama host")
-    parser.add_argument("--api-key-env", default=None, help="Environment variable containing provider API key")
+    parser.add_argument(
+        "--api-key-env", default=None, help="Environment variable containing provider API key"
+    )
     parser.add_argument("--approval", choices=["never", "ask", "auto"], default="ask")
     parser.add_argument("--read-only", action="store_true")
     parser.add_argument("--resume", default=None, help="Session id or 'latest'")
@@ -84,15 +92,23 @@ def build_model_client(args: argparse.Namespace) -> ModelClient:
         script = args.fake_script.split("||") if args.fake_script else None
         return FakeModelClient(script=script, model=model)
     if provider == "ollama":
-        base_url = args.host or args.base_url or env_or(DEFAULT_OLLAMA_HOST, "PICO_OLLAMA_HOST", "OLLAMA_HOST")
+        base_url = (
+            args.host
+            or args.base_url
+            or env_or(DEFAULT_OLLAMA_HOST, "PICO_OLLAMA_HOST", "OLLAMA_HOST")
+        )
         return OllamaModelClient(model=model, base_url=base_url)
     if provider == "openai-compatible":
-        base_url = args.base_url or env_or(DEFAULT_OPENAI_BASE_URL, "PICO_OPENAI_API_BASE", "OPENAI_BASE_URL")
+        base_url = args.base_url or env_or(
+            DEFAULT_OPENAI_BASE_URL, "PICO_OPENAI_API_BASE", "OPENAI_BASE_URL"
+        )
         key_name = args.api_key_env or "PICO_OPENAI_API_KEY"
         api_key = os.environ.get(key_name) or os.environ.get("OPENAI_API_KEY")
         return OpenAICompatibleModelClient(model=model, base_url=base_url, api_key=api_key)
     if provider == "anthropic-compatible":
-        base_url = args.base_url or env_or(DEFAULT_ANTHROPIC_BASE_URL, "PICO_ANTHROPIC_API_BASE", "ANTHROPIC_BASE_URL")
+        base_url = args.base_url or env_or(
+            DEFAULT_ANTHROPIC_BASE_URL, "PICO_ANTHROPIC_API_BASE", "ANTHROPIC_BASE_URL"
+        )
         key_name = args.api_key_env or "PICO_ANTHROPIC_API_KEY"
         api_key = os.environ.get(key_name) or os.environ.get("ANTHROPIC_API_KEY")
         return AnthropicCompatibleModelClient(model=model, base_url=base_url, api_key=api_key)

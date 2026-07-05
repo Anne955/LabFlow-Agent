@@ -26,8 +26,12 @@ class StoreTests(unittest.TestCase):
             self.assertTrue((run_dir / "task_state.json").is_file())
             self.assertTrue((run_dir / "trace.jsonl").is_file())
             self.assertTrue((run_dir / "report.json").is_file())
-            self.assertEqual(json.loads((run_dir / "task_state.json").read_text())["status"], "completed")
-            self.assertEqual(json.loads((run_dir / "report.json").read_text())["status"], "completed")
+            self.assertEqual(
+                json.loads((run_dir / "task_state.json").read_text())["status"], "completed"
+            )
+            self.assertEqual(
+                json.loads((run_dir / "report.json").read_text())["status"], "completed"
+            )
 
     def test_session_store_save_load_latest(self):
         from pathlib import Path

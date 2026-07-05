@@ -58,12 +58,20 @@ class ToolExecutor:
 
     def _approval_error(self, spec: ToolSpec, args: dict[str, Any]) -> ToolResult | None:
         if self.read_only:
-            return ToolResult(False, f"risky tool blocked in read-only mode: {spec.name}", error_code="read_only")
+            return ToolResult(
+                False, f"risky tool blocked in read-only mode: {spec.name}", error_code="read_only"
+            )
         if self.approval == "never":
-            return ToolResult(False, f"risky tool blocked by approval policy: {spec.name}", error_code="approval_denied")
+            return ToolResult(
+                False,
+                f"risky tool blocked by approval policy: {spec.name}",
+                error_code="approval_denied",
+            )
         if self.approval == "auto":
             return None
         approved = self.approval_callback(spec, args) if self.approval_callback else False
         if not approved:
-            return ToolResult(False, f"risky tool not approved: {spec.name}", error_code="approval_denied")
+            return ToolResult(
+                False, f"risky tool not approved: {spec.name}", error_code="approval_denied"
+            )
         return None

@@ -58,8 +58,14 @@ class FakeModelClient:
     def complete(self, request: ModelRequest) -> ModelResponse:
         self.calls.append(request)
         text = self.script.pop(0) if self.script else "<final>No more scripted responses.</final>"
-        self.last_metadata = {"provider": self.provider, "model": self.model, "fake_call": len(self.calls)}
-        return ModelResponse(text=text, raw={"text": text}, provider=self.provider, model=self.model)
+        self.last_metadata = {
+            "provider": self.provider,
+            "model": self.model,
+            "fake_call": len(self.calls),
+        }
+        return ModelResponse(
+            text=text, raw={"text": text}, provider=self.provider, model=self.model
+        )
 
     def complete_stream(self, request: ModelRequest):
         self.calls.append(request)
@@ -92,7 +98,9 @@ class JsonHttpClient:
         self.retry_events: list[dict] = []
         self.last_metadata: dict[str, Any] = {}
 
-    def _post_json(self, path: str, payload: dict[str, Any], headers: dict[str, str]) -> dict[str, Any]:
+    def _post_json(
+        self, path: str, payload: dict[str, Any], headers: dict[str, str]
+    ) -> dict[str, Any]:
         url = self.base_url + path
         body = json.dumps(payload).encode("utf-8")
         request = urllib.request.Request(url, data=body, method="POST")
@@ -169,7 +177,9 @@ class OllamaModelClient(JsonHttpClient):
             "total_duration": raw.get("total_duration", 0),
         }
         self.last_metadata = {"provider": self.provider, "model": self.model, **usage}
-        return ModelResponse(text=text, raw=raw, usage=usage, provider=self.provider, model=self.model)
+        return ModelResponse(
+            text=text, raw=raw, usage=usage, provider=self.provider, model=self.model
+        )
 
     def complete_stream(self, request: ModelRequest):
         payload = {
@@ -223,7 +233,9 @@ class OpenAICompatibleModelClient(JsonHttpClient):
             "total_tokens": raw_usage.get("total_tokens", 0),
         }
         self.last_metadata = {"provider": self.provider, "model": self.model, **usage}
-        return ModelResponse(text=text, raw=raw, usage=usage, provider=self.provider, model=self.model)
+        return ModelResponse(
+            text=text, raw=raw, usage=usage, provider=self.provider, model=self.model
+        )
 
     def complete_stream(self, request: ModelRequest):
         headers = {}
@@ -239,7 +251,7 @@ class OpenAICompatibleModelClient(JsonHttpClient):
         def parse(line):
             if not line.startswith("data:"):
                 return None
-            data = line[len("data:"):].strip()
+            data = line[len("data:") :].strip()
             if data == "[DONE]":
                 return None
             try:
@@ -292,7 +304,9 @@ class AnthropicCompatibleModelClient(JsonHttpClient):
             "cache_hit": bool(usage["cache_read_input_tokens"]),
         }
         self.last_metadata = {"provider": self.provider, "model": self.model, **usage, **cache}
-        return ModelResponse(text=text, raw=raw, usage=usage, cache=cache, provider=self.provider, model=self.model)
+        return ModelResponse(
+            text=text, raw=raw, usage=usage, cache=cache, provider=self.provider, model=self.model
+        )
 
     def complete_stream(self, request: ModelRequest):
         headers = {"anthropic-version": "2023-06-01"}
@@ -308,7 +322,7 @@ class AnthropicCompatibleModelClient(JsonHttpClient):
         def parse(line):
             if not line.startswith("data:"):
                 return None
-            data = line[len("data:"):].strip()
+            data = line[len("data:") :].strip()
             try:
                 obj = json.loads(data)
             except json.JSONDecodeError:

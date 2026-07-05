@@ -12,9 +12,34 @@ from evaluate_qc import main
 def write_qc(path: Path, batch_id: str, sample_id: str, check: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=["finding_id", "batch_id", "sample_id", "file", "check", "severity", "status", "message", "evidence"])
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=[
+                "finding_id",
+                "batch_id",
+                "sample_id",
+                "file",
+                "check",
+                "severity",
+                "status",
+                "message",
+                "evidence",
+            ],
+        )
         writer.writeheader()
-        writer.writerow({"finding_id": "F0001", "batch_id": batch_id, "sample_id": sample_id, "file": "file.csv", "check": check, "severity": "critical", "status": "fail", "message": "", "evidence": ""})
+        writer.writerow(
+            {
+                "finding_id": "F0001",
+                "batch_id": batch_id,
+                "sample_id": sample_id,
+                "file": "file.csv",
+                "check": check,
+                "severity": "critical",
+                "status": "fail",
+                "message": "",
+                "evidence": "",
+            }
+        )
 
 
 class EvaluateMultiBatchTests(unittest.TestCase):
@@ -23,29 +48,71 @@ class EvaluateMultiBatchTests(unittest.TestCase):
             root = Path(directory)
             for batch_id in ["batch_demo_001", "batch_demo_002"]:
                 (root / "data" / batch_id).mkdir(parents=True)
-                (root / "data" / batch_id / "metadata.csv").write_text("sample_id,method\ns1,raman\n", encoding="utf-8")
-                write_qc(root / "outputs" / batch_id / "qc_summary.csv", batch_id, "s1", "negative_intensity")
+                (root / "data" / batch_id / "metadata.csv").write_text(
+                    "sample_id,method\ns1,raman\n", encoding="utf-8"
+                )
+                write_qc(
+                    root / "outputs" / batch_id / "qc_summary.csv",
+                    batch_id,
+                    "s1",
+                    "negative_intensity",
+                )
                 (root / "labels").mkdir(exist_ok=True)
-                (root / "labels" / f"{batch_id}_labels.json").write_text(json.dumps({"batch_id": batch_id, "expected_findings": [{"sample_id": "s1", "check": "negative_intensity"}]}), encoding="utf-8")
+                (root / "labels" / f"{batch_id}_labels.json").write_text(
+                    json.dumps(
+                        {
+                            "batch_id": batch_id,
+                            "expected_findings": [
+                                {"sample_id": "s1", "check": "negative_intensity"}
+                            ],
+                        }
+                    ),
+                    encoding="utf-8",
+                )
                 (root / "reports").mkdir(exist_ok=True)
-                (root / "reports" / f"{batch_id}_qc_report.md").write_text("\n".join(["数据概况", "metadata 检查", "文件一致性检查", "数值异常检查", "预处理结果", "异常样本列表", "输出路径", "复核建议"]), encoding="utf-8")
+                (root / "reports" / f"{batch_id}_qc_report.md").write_text(
+                    "\n".join(
+                        [
+                            "数据概况",
+                            "metadata 检查",
+                            "文件一致性检查",
+                            "数值异常检查",
+                            "预处理结果",
+                            "异常样本列表",
+                            "输出路径",
+                            "复核建议",
+                        ]
+                    ),
+                    encoding="utf-8",
+                )
                 (root / "traces").mkdir(exist_ok=True)
-                (root / "traces" / f"{batch_id}_workflow_log.json").write_text(json.dumps({"total_duration_seconds": 1.5, "events": []}), encoding="utf-8")
+                (root / "traces" / f"{batch_id}_workflow_log.json").write_text(
+                    json.dumps({"total_duration_seconds": 1.5, "events": []}), encoding="utf-8"
+                )
             cwd = Path.cwd()
             try:
                 import os
 
                 os.chdir(root)
                 self.assertEqual(
-                    main([
-                        "--pred-dir", "outputs",
-                        "--labels-dir", "labels",
-                        "--reports-dir", "reports",
-                        "--traces-dir", "traces",
-                        "--output", "evaluation_summary.json",
-                        "--errors", "evaluation_errors.csv",
-                        "--resume-metrics", "resume_metrics.json",
-                    ]),
+                    main(
+                        [
+                            "--pred-dir",
+                            "outputs",
+                            "--labels-dir",
+                            "labels",
+                            "--reports-dir",
+                            "reports",
+                            "--traces-dir",
+                            "traces",
+                            "--output",
+                            "evaluation_summary.json",
+                            "--errors",
+                            "evaluation_errors.csv",
+                            "--resume-metrics",
+                            "resume_metrics.json",
+                        ]
+                    ),
                     0,
                 )
             finally:

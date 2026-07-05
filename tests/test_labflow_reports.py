@@ -47,7 +47,10 @@ class LabFlowReportTests(unittest.TestCase):
             batch = root / "data" / "batch_demo_001"
             (batch / "spectra").mkdir(parents=True)
             (batch / "metadata.csv").write_text("sample_id,method\ns1,raman\n", encoding="utf-8")
-            (batch / "spectra" / "s1_raman.csv").write_text("x,intensity\n1,1\n2,2\n3,3\n4,4\n5,5\n6,6\n7,7\n8,8\n9,9\n10,10\n", encoding="utf-8")
+            (batch / "spectra" / "s1_raman.csv").write_text(
+                "x,intensity\n1,1\n2,2\n3,3\n4,4\n5,5\n6,6\n7,7\n8,8\n9,9\n10,10\n",
+                encoding="utf-8",
+            )
             agent = Pico(
                 workspace=WorkspaceContext.build(root),
                 model_client=FakeModelClient(

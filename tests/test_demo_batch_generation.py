@@ -12,7 +12,21 @@ class DemoBatchGenerationTests(unittest.TestCase):
     def test_generator_creates_requested_batches_and_labels(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
-            self.assertEqual(main(["--batches", "2", "--samples-per-batch", "5", "--seed", "7", "--root", str(root)]), 0)
+            self.assertEqual(
+                main(
+                    [
+                        "--batches",
+                        "2",
+                        "--samples-per-batch",
+                        "5",
+                        "--seed",
+                        "7",
+                        "--root",
+                        str(root),
+                    ]
+                ),
+                0,
+            )
             for index in [1, 2]:
                 batch_id = f"batch_demo_{index:03d}"
                 batch = root / "data" / batch_id

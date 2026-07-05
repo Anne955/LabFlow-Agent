@@ -41,17 +41,24 @@ class AgentPlannerTests(unittest.TestCase):
     def test_metadata_only_plan(self):
         plan = build_plan("只检查 batch_demo_001 的 metadata")
         self.assertEqual(plan.intent, METADATA_ONLY)
-        self.assertEqual([step.name for step in plan.steps], ["scan_experiment_dir", "inspect_table"])
+        self.assertEqual(
+            [step.name for step in plan.steps], ["scan_experiment_dir", "inspect_table"]
+        )
 
     def test_report_only_plan(self):
         plan = build_plan("重新生成 batch_demo_001 的报告")
         self.assertEqual(plan.intent, REPORT_ONLY)
-        self.assertEqual([step.name for step in plan.steps], ["summarize_outputs", "generate_report", "export_workflow_log"])
+        self.assertEqual(
+            [step.name for step in plan.steps],
+            ["summarize_outputs", "generate_report", "export_workflow_log"],
+        )
 
     def test_preprocess_plan_with_critical_skip(self):
         plan = build_plan("跳过 critical 样本，对 batch_demo_001 做归一化")
         self.assertEqual(plan.intent, PREPROCESS_ONLY)
-        self.assertEqual([step.name for step in plan.steps], ["quality_check", "run_preprocess_script"])
+        self.assertEqual(
+            [step.name for step in plan.steps], ["quality_check", "run_preprocess_script"]
+        )
         self.assertTrue(plan.steps[1].args["skip_critical"])
 
     def test_only_qc_passed_and_no_skip_parsing(self):
@@ -78,12 +85,22 @@ class AgentPlannerTests(unittest.TestCase):
         plan = build_plan("对比 batch_demo_001 和 batch_demo_002 的 QC 结果")
         self.assertEqual(plan.intent, COMPARE_BATCHES)
         self.assertEqual(plan.inputs.batch_ids, ("batch_demo_001", "batch_demo_002"))
-        self.assertEqual([step.name for step in plan.steps], ["summarize_outputs", "summarize_outputs", "compare_batch_summaries"])
+        self.assertEqual(
+            [step.name for step in plan.steps],
+            ["summarize_outputs", "summarize_outputs", "compare_batch_summaries"],
+        )
         self.assertEqual(plan.steps[-1].kind, "internal")
 
     def test_templates_exist_and_are_json_parseable(self):
         root = Path(__file__).resolve().parents[1]
-        for name in ["full_qc", "metadata_only", "qc_only", "preprocess_only", "report_only", "explain_finding"]:
+        for name in [
+            "full_qc",
+            "metadata_only",
+            "qc_only",
+            "preprocess_only",
+            "report_only",
+            "explain_finding",
+        ]:
             path = root / "workflows" / f"{name}.yaml"
             self.assertTrue(path.is_file())
             data = json.loads(path.read_text(encoding="utf-8"))

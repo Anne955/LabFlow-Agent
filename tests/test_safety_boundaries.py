@@ -30,7 +30,9 @@ class SafetyBoundariesTests(unittest.TestCase):
             (batch / "metadata.csv").write_text("sample_id,method\ns1,raman\n", encoding="utf-8")
             ctx = make_context(root)
             with self.assertRaises(ValueError):
-                tool_quality_check(ctx, {"experiment_dir": "data/batch_demo_001", "batch_id": "../bad"})
+                tool_quality_check(
+                    ctx, {"experiment_dir": "data/batch_demo_001", "batch_id": "../bad"}
+                )
             with self.assertRaises(ValueError):
                 tool_summarize_outputs(ctx, {"batch_id": "../bad"})
             with self.assertRaises(ValueError):
@@ -41,13 +43,21 @@ class SafetyBoundariesTests(unittest.TestCase):
             root = Path(directory)
             with self.assertRaises(ValueError):
                 resolve_output_path(root, "batch_demo_001", "../escape.csv")
-            self.assertEqual(resolve_report_path(root, "batch_demo_001"), root.resolve() / "reports" / "batch_demo_001_qc_report.md")
-            self.assertEqual(resolve_trace_path(root, "batch_demo_001"), root.resolve() / "traces" / "batch_demo_001_workflow_log.json")
+            self.assertEqual(
+                resolve_report_path(root, "batch_demo_001"),
+                root.resolve() / "reports" / "batch_demo_001_qc_report.md",
+            )
+            self.assertEqual(
+                resolve_trace_path(root, "batch_demo_001"),
+                root.resolve() / "traces" / "batch_demo_001_workflow_log.json",
+            )
 
     def test_labflow_registry_does_not_expose_coding_write_tools(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
-            executor = ToolExecutor(build_tool_registry(make_context(root)), make_context(root), approval="auto")
+            executor = ToolExecutor(
+                build_tool_registry(make_context(root)), make_context(root), approval="auto"
+            )
             for name, args in [
                 ("run_shell", {"command": "python --version"}),
                 ("write_file", {"path": "x.txt", "content": "x"}),

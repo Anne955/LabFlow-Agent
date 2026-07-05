@@ -3,6 +3,7 @@
 These primitives are the foundation shared by both the generic tool registry
 (pico.tools.generic) and the LabFlow tool registry (pico.tools.registry).
 """
+
 from __future__ import annotations
 
 import json
@@ -78,7 +79,10 @@ def relpath(ctx: ToolContext, path: Path) -> str:
 
 
 def tool_signature(registry: dict[str, ToolSpec]) -> str:
-    data = {name: {"schema": spec.schema, "risky": spec.risky} for name, spec in sorted(registry.items())}
+    data = {
+        name: {"schema": spec.schema, "risky": spec.risky}
+        for name, spec in sorted(registry.items())
+    }
     return json.dumps(data, sort_keys=True)
 
 

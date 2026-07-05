@@ -24,7 +24,9 @@ def load_trace_events(trace_path: Path) -> list[dict[str, Any]]:
     return events
 
 
-def build_workflow_log(trace_path: Path, batch_id: str, run_id: str, session_id: str) -> dict[str, Any]:
+def build_workflow_log(
+    trace_path: Path, batch_id: str, run_id: str, session_id: str
+) -> dict[str, Any]:
     safe_batch = sanitize_batch_id(batch_id)
     tool_events = []
     for event in load_trace_events(trace_path):
@@ -36,7 +38,9 @@ def build_workflow_log(trace_path: Path, batch_id: str, run_id: str, session_id:
         result = payload.get("result", {})
         if not isinstance(result, dict):
             result = {}
-        metadata = result.get("metadata", {}) if isinstance(result.get("metadata", {}), dict) else {}
+        metadata = (
+            result.get("metadata", {}) if isinstance(result.get("metadata", {}), dict) else {}
+        )
         event_batch = str(metadata.get("batch_id") or safe_batch)
         tool_events.append(
             {

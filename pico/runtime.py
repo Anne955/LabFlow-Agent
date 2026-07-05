@@ -86,7 +86,11 @@ class Pico:
         self.tool_summaries = []
         self.current_batch_id = None
         self.run_store.start_run(task_state)
-        self.emit_trace(task_state.run_id, "run_started", {"session_id": self.session_id, "request": user_message})
+        self.emit_trace(
+            task_state.run_id,
+            "run_started",
+            {"session_id": self.session_id, "request": user_message},
+        )
 
         final_answer = ""
         max_turns = self.max_steps + self.max_attempts + 1
@@ -117,7 +121,12 @@ class Pico:
             self.emit_trace(
                 task_state.run_id,
                 "model_completed",
-                {"provider": response.provider, "model": response.model, "usage": response.usage, "cache": response.cache},
+                {
+                    "provider": response.provider,
+                    "model": response.model,
+                    "usage": response.usage,
+                    "cache": response.cache,
+                },
             )
             for evt in getattr(self.model_client, "retry_events", [])[:]:
                 self.emit_trace(task_state.run_id, "provider_retry", evt)
@@ -150,20 +159,34 @@ class Pico:
                     self.refresh_prefix(force=True)
                 if tool_name == "read_file" and result.ok and "path" in result.metadata:
                     path = str(result.metadata["path"])
-                    self.memory.set_file_summary(path, summarize_observation(result.text), str(result.metadata.get("freshness", "")))
+                    self.memory.set_file_summary(
+                        path,
+                        summarize_observation(result.text),
+                        str(result.metadata.get("freshness", "")),
+                    )
                 for path in result.affected_paths:
                     self.memory.remember_file(path)
                 observation = result.to_observation()
                 self.history.append({"role": "assistant", "content": parsed.raw})
                 self.history.append({"role": "tool", "name": tool_name, "content": observation})
-                self.tool_summaries.append({"name": tool_name, "duration_seconds": duration_seconds, **result.to_dict()})
+                self.tool_summaries.append(
+                    {"name": tool_name, "duration_seconds": duration_seconds, **result.to_dict()}
+                )
                 self.emit_trace(
                     task_state.run_id,
                     "tool_finished",
-                    {"name": tool_name, "input": tool_args, "duration_seconds": duration_seconds, "result": result.to_dict()},
+                    {
+                        "name": tool_name,
+                        "input": tool_args,
+                        "duration_seconds": duration_seconds,
+                        "result": result.to_dict(),
+                    },
                 )
                 if tool_name == "export_workflow_log" and result.ok:
-                    self._write_workflow_log_from_trace(task_state.run_id, str(result.metadata.get("batch_id", self.current_batch_id or "")))
+                    self._write_workflow_log_from_trace(
+                        task_state.run_id,
+                        str(result.metadata.get("batch_id", self.current_batch_id or "")),
+                    )
                 self.run_store.write_task_state(task_state)
                 continue
             # retry: give the model one correction note.
@@ -287,9 +310,13 @@ class Pico:
             try:
                 payload = json.loads(body)
             except json.JSONDecodeError as exc:
-                return ParsedOutput("retry", f"Invalid tool JSON: {exc}. Return valid JSON inside <tool>.", raw)
+                return ParsedOutput(
+                    "retry", f"Invalid tool JSON: {exc}. Return valid JSON inside <tool>.", raw
+                )
             if not isinstance(payload, dict) or "name" not in payload:
-                return ParsedOutput("retry", "Tool payload must be an object with name and args.", raw)
+                return ParsedOutput(
+                    "retry", "Tool payload must be an object with name and args.", raw
+                )
             payload.setdefault("args", {})
             if not isinstance(payload["args"], dict):
                 return ParsedOutput("retry", "Tool args must be an object.", raw)
@@ -316,7 +343,13 @@ class Pico:
         redacted = json.loads(redact_text(text, self.secret_env_names))
         self.run_store.append_trace(
             run_id,
-            {"id": new_id("evt"), "type": event_type, "created_at": now_iso(), "run_id": run_id, "payload": redacted},
+            {
+                "id": new_id("evt"),
+                "type": event_type,
+                "created_at": now_iso(),
+                "run_id": run_id,
+                "payload": redacted,
+            },
         )
 
     def _write_workflow_log_from_trace(self, run_id: str, batch_id: str) -> Path | None:

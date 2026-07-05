@@ -22,7 +22,12 @@ class TimingMetricsTests(unittest.TestCase):
                         "name": "scan_experiment_dir",
                         "input": {"experiment_dir": "data/batch_demo_001"},
                         "duration_seconds": 0.25,
-                        "result": {"ok": True, "metadata": {"batch_id": "batch_demo_001"}, "affected_paths": [], "error_code": None},
+                        "result": {
+                            "ok": True,
+                            "metadata": {"batch_id": "batch_demo_001"},
+                            "affected_paths": [],
+                            "error_code": None,
+                        },
                     },
                 },
                 {
@@ -34,7 +39,12 @@ class TimingMetricsTests(unittest.TestCase):
                         "name": "quality_check",
                         "input": {"batch_id": "batch_demo_001"},
                         "duration_seconds": 0.75,
-                        "result": {"ok": True, "metadata": {"batch_id": "batch_demo_001"}, "affected_paths": ["outputs/batch_demo_001/qc_summary.csv"], "error_code": None},
+                        "result": {
+                            "ok": True,
+                            "metadata": {"batch_id": "batch_demo_001"},
+                            "affected_paths": ["outputs/batch_demo_001/qc_summary.csv"],
+                            "error_code": None,
+                        },
                     },
                 },
             ]

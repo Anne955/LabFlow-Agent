@@ -26,10 +26,16 @@ class RetryTraceClearTests(unittest.TestCase):
             # then retries exhaust and complete() raises ProviderConnectionError
             # (a ModelProviderError) - the terminal-failure path under test.
             client = OpenAICompatibleModelClient(
-                model="m", base_url="http://x", api_key="k", timeout=5,
+                model="m",
+                base_url="http://x",
+                api_key="k",
+                timeout=5,
                 retry_config=RetryConfig(
-                    max_retries=1, base_delay_ms=1, max_delay_ms=2,
-                    sleep=lambda _s: None, rng=lambda: 0,
+                    max_retries=1,
+                    base_delay_ms=1,
+                    max_delay_ms=2,
+                    sleep=lambda _s: None,
+                    rng=lambda: 0,
                 ),
             )
             pico = Pico(
@@ -41,9 +47,7 @@ class RetryTraceClearTests(unittest.TestCase):
             )
 
             def fake_urlopen(req, timeout):
-                raise urllib.error.HTTPError(
-                    "http://x", 500, "err", {}, io.BytesIO(b"")
-                )
+                raise urllib.error.HTTPError("http://x", 500, "err", {}, io.BytesIO(b""))
 
             with patch("urllib.request.urlopen", side_effect=fake_urlopen):
                 pico.ask("hi")
