@@ -7,9 +7,10 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from ..config import DEFAULT_TOOL_OUTPUT_LIMIT, IGNORED_DIRS
 from ..tool_context import ToolContext

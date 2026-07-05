@@ -10,7 +10,6 @@ from pico.run_store import RunStore, SessionStore
 from pico.runtime import Pico
 from pico.workspace import WorkspaceContext
 
-
 FULL_SCRIPT = [
     '<tool>{"name":"scan_experiment_dir","args":{"experiment_dir":"data/batch_demo_001","batch_id":"batch_demo_001"}}</tool>',
     '<tool>{"name":"inspect_table","args":{"path":"data/batch_demo_001/metadata.csv","max_rows":5}}</tool>',

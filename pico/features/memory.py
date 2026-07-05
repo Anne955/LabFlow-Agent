@@ -17,7 +17,7 @@ class FileSummary:
         return {"path": self.path, "summary": self.summary, "freshness": self.freshness}
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "FileSummary":
+    def from_dict(cls, data: dict[str, Any]) -> FileSummary:
         return cls(str(data["path"]), str(data.get("summary", "")), str(data.get("freshness", "")))
 
 
@@ -31,7 +31,7 @@ class EpisodicNote:
         return {"text": self.text, "tags": self.tags, "source": self.source}
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "EpisodicNote":
+    def from_dict(cls, data: dict[str, Any]) -> EpisodicNote:
         return cls(str(data.get("text", "")), list(data.get("tags", [])), str(data.get("source", "runtime")))
 
 
@@ -103,7 +103,7 @@ class LayeredMemory:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any] | None) -> "LayeredMemory":
+    def from_dict(cls, data: dict[str, Any] | None) -> LayeredMemory:
         if not data:
             return cls()
         memory = cls(task_summary=str(data.get("task_summary", "")))

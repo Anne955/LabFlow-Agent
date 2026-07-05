@@ -18,10 +18,10 @@ from .security import collect_secret_env_names, redact_text, safe_shell_env
 from .task_state import TaskState, new_id, now_iso
 from .tool_context import ToolContext
 from .tool_executor import ToolExecutor
-from .tools import ToolResult
 from .tool_registry import build_tool_registry
-from .workspace import WorkspaceContext, resolve_in_workspace
+from .tools import ToolResult
 from .workflow_trace import build_run_summary, build_workflow_log, write_workflow_log
+from .workspace import WorkspaceContext, resolve_in_workspace
 
 
 @dataclass
@@ -64,7 +64,7 @@ class Pico:
         session_store: SessionStore,
         run_store: RunStore,
         **kwargs: Any,
-    ) -> "Pico":
+    ) -> Pico:
         return cls(
             workspace=workspace,
             model_client=model_client,

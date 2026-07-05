@@ -10,7 +10,6 @@ from pico.tool_executor import ToolExecutor
 from pico.tool_registry import build_labflow_tool_registry, build_tool_registry
 from pico.workspace import resolve_in_workspace
 
-
 EXPECTED_TOOLS = {
     "scan_experiment_dir",
     "inspect_table",

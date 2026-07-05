@@ -79,7 +79,7 @@ class WorkspaceContext:
     project_docs: dict[str, str] = field(default_factory=dict)
 
     @classmethod
-    def build(cls, cwd: str | Path) -> "WorkspaceContext":
+    def build(cls, cwd: str | Path) -> WorkspaceContext:
         requested = Path(cwd).resolve()
         repo_root, is_git_repo = discover_repo_root(requested)
         branch = run_git(repo_root, "branch", "--show-current") if is_git_repo else ""

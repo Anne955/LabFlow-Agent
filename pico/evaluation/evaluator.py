@@ -20,7 +20,7 @@ class BenchmarkEvaluator:
         self.tasks = tasks
 
     @classmethod
-    def from_file(cls, path: str | Path) -> "BenchmarkEvaluator":
+    def from_file(cls, path: str | Path) -> BenchmarkEvaluator:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
         tasks = [BenchmarkTask(**item) for item in data.get("tasks", [])]
         return cls(tasks)

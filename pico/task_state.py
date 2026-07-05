@@ -30,7 +30,7 @@ class TaskState:
     updated_at: str = field(default_factory=now_iso)
 
     @classmethod
-    def create(cls, user_request: str) -> "TaskState":
+    def create(cls, user_request: str) -> TaskState:
         return cls(run_id=new_id("run"), task_id=new_id("task"), user_request=user_request)
 
     def touch(self) -> None:
@@ -80,7 +80,7 @@ class TaskState:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "TaskState":
+    def from_dict(cls, data: dict[str, Any]) -> TaskState:
         return cls(
             run_id=str(data["run_id"]),
             task_id=str(data["task_id"]),

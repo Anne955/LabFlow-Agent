@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any, Protocol
 
 from .config import DEFAULT_CONTEXT_BUDGET

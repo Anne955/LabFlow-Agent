@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from scripts.convert_rruff_to_labflow_csv import convert_rruff_batch, main, parse_rruff_txt
+from scripts.convert_rruff_to_labflow_csv import convert_rruff_batch, parse_rruff_txt
 
 
 def write_raw(path: Path, offset: int = 0) -> None:

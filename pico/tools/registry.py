@@ -3,7 +3,6 @@ from __future__ import annotations
 from ..tool_context import ToolContext
 from .base import ToolSpec
 
-
 SCAN_EXPERIMENT_DIR_SCHEMA = {
     "type": "object",
     "properties": {

@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from evaluate_qc import evaluate_multi, main
+from evaluate_qc import main
 
 
 def write_qc(path: Path, batch_id: str, sample_id: str, check: str) -> None:
