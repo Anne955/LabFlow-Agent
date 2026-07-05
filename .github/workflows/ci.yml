@@ -14,14 +14,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install ruff>=0.4.4
-      # TODO(lint-cleanup): the repo currently has 262 pre-existing ruff
-      # violations and 35 files needing reformatting, deferred to a dedicated
-      # lint-cleanup task. `--exit-zero` / `|| true` lets CI stay green while
-      # still surfacing the debt in logs. Drop these once that cleanup lands so
-      # lint becomes a hard gate again.
-      - run: ruff check . --exit-zero
-      - run: ruff format --check . || true
+      - run: pip install 'ruff>=0.4.4'
+      - run: ruff check .
+      - run: ruff format --check .
 
   test:
     runs-on: ubuntu-latest
