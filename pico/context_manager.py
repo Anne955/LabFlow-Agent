@@ -15,6 +15,7 @@ def build_prompt(
     user_message: str,
     budget: int = DEFAULT_CONTEXT_BUDGET,
     suggested_plan: str = "",
+    strategy: TruncationStrategy | None = None,
 ) -> tuple[str, dict[str, Any]]:
     sections: dict[str, str] = {
         "prefix": prefix.text,
@@ -27,7 +28,8 @@ def build_prompt(
     reductions: dict[str, int] = {}
     total = sum(len(text) for text in sections.values())
     if total > budget:
-        strategy = PriorityTruncation()
+        if strategy is None:
+            strategy = PriorityTruncation()
         truncated = strategy.truncate(sections, budget)
         for key, text in truncated.items():
             if len(text) < len(sections[key]):

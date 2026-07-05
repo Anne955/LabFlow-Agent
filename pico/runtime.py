@@ -7,8 +7,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from .agent.intent import detect_intent
 from .agent.planner import build_plan, render_plan
-from .config import DEFAULT_MAX_ATTEMPTS, DEFAULT_MAX_NEW_TOKENS, DEFAULT_MAX_STEPS
+from .config import DEFAULT_MAX_ATTEMPTS, DEFAULT_MAX_NEW_TOKENS, DEFAULT_MAX_STEPS, env_or
 from .context_manager import build_prompt
 from .features.memory import DurableMemoryStore, LayeredMemory
 from .prompt_prefix import PromptPrefix, build_prompt_prefix
@@ -230,7 +231,22 @@ class Pico:
         history_text = self.render_history()
         suggested_plan = ""
         if self.use_planner:
-            suggested_plan = render_plan(build_plan(user_message))
+            plan = build_plan(user_message)
+            suggested_plan = render_plan(plan)
+            intent = plan.intent
+        else:
+            intent = detect_intent(user_message).intent
+        # Construct the truncation strategy inline (function-local import to avoid
+        # any circular import with context_manager) so that PICO_TRUNCATION_STRATEGY=smart
+        # is actually honored and carries the detected intent.
+        if env_or("priority", "PICO_TRUNCATION_STRATEGY") == "smart":
+            from .context_manager import SmartTruncation
+
+            strategy = SmartTruncation(intent=intent)
+        else:
+            from .context_manager import PriorityTruncation
+
+            strategy = PriorityTruncation()
         return build_prompt(
             self.prefix,
             memory_text,
@@ -238,6 +254,7 @@ class Pico:
             history_text,
             user_message,
             suggested_plan=suggested_plan,
+            strategy=strategy,
         )  # type: ignore[arg-type]
 
     def refresh_prefix(self, force: bool = False) -> None:
