@@ -47,8 +47,11 @@ class ModelClient(Protocol):
 
         Provisional — not invoked by the runtime. The `--stream` CLI flag replays
         the already-assembled final answer via the stream_callback instead of
-        calling this method, the real-client SSE/NDJSON parsers are not
-        unit-tested, and the streaming HTTP path does not use `with_retry`.
+        calling this method, and the streaming HTTP path does not use
+        `with_retry`. The real-client SSE/NDJSON line parsers
+        (`parse_ollama_stream_line`, `parse_openai_stream_line`,
+        `parse_anthropic_stream_line`) are unit-tested in
+        `tests/test_followup2_stream_parsers.py`.
         """
 
 
@@ -160,6 +163,63 @@ class JsonHttpClient:
                     yield delta
 
 
+def parse_ollama_stream_line(line: str) -> str | None:
+    """Parse one NDJSON line from Ollama's streaming ``/api/generate`` response.
+
+    Returns the ``response`` delta string, or ``None`` for empty/malformed lines
+    and lines with no ``response`` payload (e.g. the final ``{"done": true}``).
+    """
+    if not line:
+        return None
+    try:
+        obj = json.loads(line)
+    except json.JSONDecodeError:
+        return None
+    return str(obj.get("response", "")) or None
+
+
+def parse_openai_stream_line(line: str) -> str | None:
+    """Parse one SSE line from an OpenAI-compatible streaming chat completion.
+
+    Only ``data:`` lines are considered; the ``[DONE]`` sentinel and lines with
+    no ``choices[0].delta.content`` yield ``None``.
+    """
+    if not line.startswith("data:"):
+        return None
+    data = line[len("data:") :].strip()
+    if data == "[DONE]":
+        return None
+    try:
+        obj = json.loads(data)
+    except json.JSONDecodeError:
+        return None
+    choices = obj.get("choices") or []
+    if not choices:
+        return None
+    delta = choices[0].get("delta") or {}
+    return str(delta.get("content") or "") or None
+
+
+def parse_anthropic_stream_line(line: str) -> str | None:
+    """Parse one SSE line from an Anthropic-compatible streaming messages response.
+
+    Only ``data:`` lines carrying a ``content_block_delta`` event are decoded;
+    the ``delta.text`` field is returned (``None`` for other event types and for
+    deltas without a ``text`` key, e.g. ``input_json_delta``).
+    """
+    if not line.startswith("data:"):
+        return None
+    data = line[len("data:") :].strip()
+    try:
+        obj = json.loads(data)
+    except json.JSONDecodeError:
+        return None
+    if obj.get("type") != "content_block_delta":
+        return None
+    delta = obj.get("delta") or {}
+    return str(delta.get("text") or "") or None
+
+
 class OllamaModelClient(JsonHttpClient):
     provider = "ollama"
 
@@ -204,16 +264,7 @@ class OllamaModelClient(JsonHttpClient):
             "options": {"num_predict": request.max_tokens},
         }
 
-        def parse(line):
-            if not line:
-                return None
-            try:
-                obj = json.loads(line)
-            except json.JSONDecodeError:
-                return None
-            return str(obj.get("response", "")) or None
-
-        yield from self._stream_post("/api/generate", payload, {}, parse)
+        yield from self._stream_post("/api/generate", payload, {}, parse_ollama_stream_line)
 
 
 class OpenAICompatibleModelClient(JsonHttpClient):
@@ -268,23 +319,9 @@ class OpenAICompatibleModelClient(JsonHttpClient):
             "stream": True,
         }
 
-        def parse(line):
-            if not line.startswith("data:"):
-                return None
-            data = line[len("data:") :].strip()
-            if data == "[DONE]":
-                return None
-            try:
-                obj = json.loads(data)
-            except json.JSONDecodeError:
-                return None
-            choices = obj.get("choices") or []
-            if not choices:
-                return None
-            delta = choices[0].get("delta") or {}
-            return str(delta.get("content") or "") or None
-
-        yield from self._stream_post("/v1/chat/completions", payload, headers, parse)
+        yield from self._stream_post(
+            "/v1/chat/completions", payload, headers, parse_openai_stream_line
+        )
 
 
 class AnthropicCompatibleModelClient(JsonHttpClient):
@@ -346,17 +383,4 @@ class AnthropicCompatibleModelClient(JsonHttpClient):
             "stream": True,
         }
 
-        def parse(line):
-            if not line.startswith("data:"):
-                return None
-            data = line[len("data:") :].strip()
-            try:
-                obj = json.loads(data)
-            except json.JSONDecodeError:
-                return None
-            if obj.get("type") != "content_block_delta":
-                return None
-            delta = obj.get("delta") or {}
-            return str(delta.get("text") or "") or None
-
-        yield from self._stream_post("/v1/messages", payload, headers, parse)
+        yield from self._stream_post("/v1/messages", payload, headers, parse_anthropic_stream_line)
