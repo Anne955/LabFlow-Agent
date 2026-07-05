@@ -2,6 +2,14 @@
 
 ## [Unreleased] — 2026-07-02 systematic improvements
 
+### Breaking changes
+- `ModelProviderError` now subclasses `PicoError` (which subclasses `Exception`) instead of
+  `RuntimeError`. The runtime's own `except ModelProviderError` handler is unaffected, but
+  external callers that relied on `except RuntimeError` to catch provider failures must switch
+  to `except ModelProviderError` (or `except PicoError`). All provider error subclasses
+  (`ProviderConnectionError`, `ProviderRateLimitError`, `ProviderAuthError`,
+  `ProviderResponseError`) inherit from `ModelProviderError` and so are affected too.
+
 ### Phase 1: Cleanup & hardening
 - Added typed error hierarchy (`PicoError`, `SafetyViolationError`, `ToolExecutionError`) in `pico/errors.py`.
 - `assert_raw_data_readonly` now raises `SafetyViolationError` and is enforced on all LabFlow write paths.
@@ -31,6 +39,7 @@
 - `CONTRIBUTING.md`, this changelog, README updates.
 
 ### Known limitations
+- `complete_stream()` is provisional: the runtime does not invoke it (the `--stream` flag replays the assembled final answer); the real-client SSE/NDJSON parsers are not unit-tested; and the streaming HTTP path does not use `with_retry`.
 - `--stream` replays the assembled final answer rather than parsing `<final>` from a live token stream.
 - `PICO_TRUNCATION_STRATEGY=smart` is not yet wired into `build_prompt`: the `SmartTruncation` strategy class and `load_truncation_strategy()` loader exist, but `pico/context_manager.py::build_prompt` still constructs a `PriorityTruncation()` directly when the budget is exceeded, so the `smart` strategy currently has no effect on prompt assembly.
 - `--lang` is not yet exposed as a CLI flag; report language is set via the `generate_report` tool argument. A `--lang` CLI option is future work.

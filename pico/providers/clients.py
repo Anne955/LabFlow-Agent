@@ -42,7 +42,14 @@ class ModelClient(Protocol):
 
     def complete(self, request: ModelRequest) -> ModelResponse: ...
 
-    def complete_stream(self, request: ModelRequest): ...
+    def complete_stream(self, request: ModelRequest):
+        """Stream tokens for a request.
+
+        Provisional — not invoked by the runtime. The `--stream` CLI flag replays
+        the already-assembled final answer via the stream_callback instead of
+        calling this method, the real-client SSE/NDJSON parsers are not
+        unit-tested, and the streaming HTTP path does not use `with_retry`.
+        """
 
 
 class FakeModelClient:
