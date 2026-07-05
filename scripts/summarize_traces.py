@@ -5,21 +5,6 @@ import json
 from pathlib import Path
 
 
-def load_run_summary(trace_path: Path) -> dict | None:
-    if not trace_path.is_file():
-        return None
-    for line in trace_path.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        try:
-            event = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if event.get("type") == "run_summary":
-            return event.get("payload")
-    return None
-
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Aggregate run_summary metrics across batch workflow logs."

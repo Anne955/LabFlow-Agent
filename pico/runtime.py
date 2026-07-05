@@ -18,8 +18,8 @@ from .security import collect_secret_env_names, redact_text, safe_shell_env
 from .task_state import TaskState, new_id, now_iso
 from .tool_context import ToolContext
 from .tool_executor import ToolExecutor
-from .tool_registry import build_tool_registry
 from .tools import ToolResult
+from .tools.registry import build_tool_registry
 from .workflow_trace import build_run_summary, build_workflow_log, write_workflow_log
 from .workspace import WorkspaceContext, resolve_in_workspace
 

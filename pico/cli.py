@@ -186,10 +186,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.repl or not args.prompt:
         return run_repl(agent)
     if args.stream:
-        buffer = []
 
         def cb(token):
-            buffer.append(token)
             print(token, end="", flush=True)
 
         answer = agent.ask(args.prompt, stream_callback=cb)
