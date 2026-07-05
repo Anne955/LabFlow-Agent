@@ -79,7 +79,10 @@ class ToolSafetyTests(unittest.TestCase):
             os.environ["SECRET_TOKEN"] = "supersecretvalue"
             try:
                 executor = make_executor(tmp_path)
-                command = f"{sys.executable} -c \"import os; print(os.environ.get('SECRET_TOKEN', 'missing'))\""
+                command = (
+                    f"{sys.executable} -c "
+                    f"\"import os; print(os.environ.get('SECRET_TOKEN', 'missing'))\""
+                )
                 result = executor.execute("run_shell", {"command": command})
                 self.assertTrue(result.ok)
                 self.assertIn("missing", result.text)

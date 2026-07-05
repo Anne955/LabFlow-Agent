@@ -43,7 +43,9 @@ def rows_to_keys(rows: list[dict[str, Any]], batch_id: str) -> set[tuple[str, st
 
 def load_predictions(path: Path) -> set[tuple[str, str]]:
     batch_id = infer_batch_id_from_pred(path)
-    return {(sample, check) for _, sample, check in rows_to_keys(load_prediction_rows(path), batch_id)}
+    return {
+        (sample, check) for _, sample, check in rows_to_keys(load_prediction_rows(path), batch_id)
+    }
 
 
 def load_labels(path: Path) -> set[tuple[str, str]]:
@@ -51,7 +53,9 @@ def load_labels(path: Path) -> set[tuple[str, str]]:
     return {(sample, check) for _, sample, check in rows_to_keys(load_label_rows(path), batch_id)}
 
 
-def precision_recall_f1(predicted: set[tuple[Any, ...]], expected: set[tuple[Any, ...]]) -> dict[str, Any]:
+def precision_recall_f1(
+    predicted: set[tuple[Any, ...]], expected: set[tuple[Any, ...]]
+) -> dict[str, Any]:
     tp = len(predicted & expected)
     fp = len(predicted - expected)
     fn = len(expected - predicted)
@@ -70,11 +74,21 @@ def precision_recall_f1(predicted: set[tuple[Any, ...]], expected: set[tuple[Any
 
 def report_field_coverage(report_path: Path | None) -> dict[str, Any]:
     if report_path is None or not report_path.is_file():
-        return {"covered": 0, "total": len(REQUIRED_REPORT_SECTIONS), "coverage": 0.0, "missing": REQUIRED_REPORT_SECTIONS}
+        return {
+            "covered": 0,
+            "total": len(REQUIRED_REPORT_SECTIONS),
+            "coverage": 0.0,
+            "missing": REQUIRED_REPORT_SECTIONS,
+        }
     text = report_path.read_text(encoding="utf-8", errors="replace")
     missing = [section for section in REQUIRED_REPORT_SECTIONS if section not in text]
     covered = len(REQUIRED_REPORT_SECTIONS) - len(missing)
-    return {"covered": covered, "total": len(REQUIRED_REPORT_SECTIONS), "coverage": covered / len(REQUIRED_REPORT_SECTIONS), "missing": missing}
+    return {
+        "covered": covered,
+        "total": len(REQUIRED_REPORT_SECTIONS),
+        "coverage": covered / len(REQUIRED_REPORT_SECTIONS),
+        "missing": missing,
+    }
 
 
 def load_trace_duration(trace_path: Path | None) -> float | None:
@@ -140,12 +154,34 @@ def infer_batch_id_from_labels(path: Path) -> str:
     return name[:-7] if name.endswith("_labels") else name
 
 
-def diagnostic_rows(predicted: set[tuple[str, str, str]], expected: set[tuple[str, str, str]]) -> list[dict[str, str]]:
+def diagnostic_rows(
+    predicted: set[tuple[str, str, str]], expected: set[tuple[str, str, str]]
+) -> list[dict[str, str]]:
     rows = []
     for batch_id, sample_id, check in sorted(predicted - expected):
-        rows.append({"batch_id": batch_id, "sample_id": sample_id, "check": check, "error_type": "false_positive", "predicted": "true", "expected": "false", "reason": "Predicted finding is not present in labels"})
+        rows.append(
+            {
+                "batch_id": batch_id,
+                "sample_id": sample_id,
+                "check": check,
+                "error_type": "false_positive",
+                "predicted": "true",
+                "expected": "false",
+                "reason": "Predicted finding is not present in labels",
+            }
+        )
     for batch_id, sample_id, check in sorted(expected - predicted):
-        rows.append({"batch_id": batch_id, "sample_id": sample_id, "check": check, "error_type": "false_negative", "predicted": "false", "expected": "true", "reason": "Expected finding was not predicted"})
+        rows.append(
+            {
+                "batch_id": batch_id,
+                "sample_id": sample_id,
+                "check": check,
+                "error_type": "false_negative",
+                "predicted": "false",
+                "expected": "true",
+                "reason": "Expected finding was not predicted",
+            }
+        )
     return rows
 
 
@@ -157,7 +193,13 @@ def count_metadata_samples(root: Path, batch_id: str) -> int:
         return sum(1 for _ in csv.DictReader(handle))
 
 
-def evaluate_single(pred_path: Path, labels_path: Path, report_path: Path | None = None, trace_path: Path | None = None, root: Path | None = None) -> dict[str, Any]:
+def evaluate_single(
+    pred_path: Path,
+    labels_path: Path,
+    report_path: Path | None = None,
+    trace_path: Path | None = None,
+    root: Path | None = None,
+) -> dict[str, Any]:
     root = root or Path.cwd()
     batch_id = infer_batch_id_from_labels(labels_path)
     predicted = rows_to_keys(load_prediction_rows(pred_path), batch_id)
@@ -169,7 +211,9 @@ def evaluate_single(pred_path: Path, labels_path: Path, report_path: Path | None
         **metrics,
         "predicted_count": len(predicted),
         "expected_count": len(expected),
-        "end_to_end_task_completed": pred_path.is_file() and (report_path.is_file() if report_path else True) and (trace_path.is_file() if trace_path else True),
+        "end_to_end_task_completed": pred_path.is_file()
+        and (report_path.is_file() if report_path else True)
+        and (trace_path.is_file() if trace_path else True),
         "report_field_coverage": report_field_coverage(report_path),
         "raw_data_miswrite_count": raw_data_miswrite_count(root, labels_path),
         "average_processing_seconds": duration,
@@ -178,7 +222,9 @@ def evaluate_single(pred_path: Path, labels_path: Path, report_path: Path | None
     }
 
 
-def evaluate_multi(pred_dir: Path, labels_dir: Path, reports_dir: Path, traces_dir: Path, root: Path) -> dict[str, Any]:
+def evaluate_multi(
+    pred_dir: Path, labels_dir: Path, reports_dir: Path, traces_dir: Path, root: Path
+) -> dict[str, Any]:
     per_batch = []
     all_predicted: set[tuple[str, str, str]] = set()
     all_expected: set[tuple[str, str, str]] = set()
@@ -206,7 +252,18 @@ def evaluate_multi(pred_dir: Path, labels_dir: Path, reports_dir: Path, traces_d
         if coverage["missing"]:
             missing_by_batch[batch_id] = list(coverage["missing"])
         batch_metrics = precision_recall_f1(predicted, expected)
-        per_batch.append({"batch_id": batch_id, **batch_metrics, "predicted_count": len(predicted), "expected_count": len(expected), "sample_count": count_metadata_samples(root, batch_id), "completed": pred_path.is_file() and report_path.is_file() and trace_path.is_file(), "processing_seconds": duration, "report_coverage": coverage["coverage"]})
+        per_batch.append(
+            {
+                "batch_id": batch_id,
+                **batch_metrics,
+                "predicted_count": len(predicted),
+                "expected_count": len(expected),
+                "sample_count": count_metadata_samples(root, batch_id),
+                "completed": pred_path.is_file() and report_path.is_file() and trace_path.is_file(),
+                "processing_seconds": duration,
+                "report_coverage": coverage["coverage"],
+            }
+        )
     metrics = precision_recall_f1(all_predicted, all_expected)
     errors = diagnostic_rows(all_predicted, all_expected)
     return {
@@ -215,8 +272,14 @@ def evaluate_multi(pred_dir: Path, labels_dir: Path, reports_dir: Path, traces_d
         "expected_count": len(all_expected),
         "predicted_count": len(all_predicted),
         **metrics,
-        "end_to_end_task_completed": all(item["completed"] for item in per_batch) if per_batch else False,
-        "report_field_coverage": {"average_coverage": sum(coverages) / len(coverages) if coverages else 0.0, "min_coverage": min(coverages) if coverages else 0.0, "missing_by_batch": missing_by_batch},
+        "end_to_end_task_completed": all(item["completed"] for item in per_batch)
+        if per_batch
+        else False,
+        "report_field_coverage": {
+            "average_coverage": sum(coverages) / len(coverages) if coverages else 0.0,
+            "min_coverage": min(coverages) if coverages else 0.0,
+            "missing_by_batch": missing_by_batch,
+        },
         "raw_data_miswrite_count": raw_miswrites,
         "average_processing_seconds": sum(durations) / len(durations) if durations else None,
         "total_processing_seconds": sum(durations) if durations else None,
@@ -239,13 +302,17 @@ def resume_metrics(summary: dict[str, Any]) -> dict[str, Any]:
         "project_name": "LabFlow Agent",
         "benchmark_batches": summary.get("batch_count", 1),
         "sample_records": summary.get("sample_count"),
-        "anomaly_types": len({item["check"] for item in summary.get("errors", [])}) if summary.get("errors") else None,
+        "anomaly_types": len({item["check"] for item in summary.get("errors", [])})
+        if summary.get("errors")
+        else None,
         "labeled_findings": summary.get("expected_count"),
         "predicted_findings": summary.get("predicted_count"),
         "precision": summary.get("precision"),
         "recall": summary.get("recall"),
         "f1": summary.get("f1"),
-        "report_field_coverage": summary.get("report_field_coverage", {}).get("average_coverage") if isinstance(summary.get("report_field_coverage"), dict) else None,
+        "report_field_coverage": summary.get("report_field_coverage", {}).get("average_coverage")
+        if isinstance(summary.get("report_field_coverage"), dict)
+        else None,
         "raw_data_miswrite_count": summary.get("raw_data_miswrite_count"),
         "average_processing_seconds": summary.get("average_processing_seconds"),
     }
@@ -274,7 +341,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.pred:
         if not args.labels:
             parser.error("--labels is required with --pred")
-        result = evaluate_single(Path(args.pred), Path(args.labels), Path(args.report) if args.report else None, Path(args.trace) if args.trace else None, root)
+        result = evaluate_single(
+            Path(args.pred),
+            Path(args.labels),
+            Path(args.report) if args.report else None,
+            Path(args.trace) if args.trace else None,
+            root,
+        )
         if args.with_runtime_metrics:
             runtime = load_runtime_block(root / args.traces_dir, result["batch_id"])
             if runtime is not None:
@@ -283,14 +356,27 @@ def main(argv: list[str] | None = None) -> int:
         if args.errors:
             write_errors(Path(args.errors), errors)
         if args.output:
-            Path(args.output).write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
+            Path(args.output).write_text(
+                json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8"
+            )
         if args.resume_metrics:
-            Path(args.resume_metrics).write_text(json.dumps(resume_metrics({"batch_count": 1, **result}), indent=2, ensure_ascii=False), encoding="utf-8")
+            Path(args.resume_metrics).write_text(
+                json.dumps(
+                    resume_metrics({"batch_count": 1, **result}), indent=2, ensure_ascii=False
+                ),
+                encoding="utf-8",
+            )
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
     if not args.pred_dir or not args.labels_dir:
         parser.error("either --pred/--labels or --pred-dir/--labels-dir is required")
-    summary = evaluate_multi(Path(args.pred_dir), Path(args.labels_dir), Path(args.reports_dir), Path(args.traces_dir), root)
+    summary = evaluate_multi(
+        Path(args.pred_dir),
+        Path(args.labels_dir),
+        Path(args.reports_dir),
+        Path(args.traces_dir),
+        root,
+    )
     if args.with_runtime_metrics:
         for batch in summary["per_batch"]:
             runtime = load_runtime_block(root / args.traces_dir, batch["batch_id"])
@@ -298,11 +384,15 @@ def main(argv: list[str] | None = None) -> int:
                 batch["runtime"] = runtime
     errors = summary.pop("errors")
     if args.output:
-        Path(args.output).write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
+        Path(args.output).write_text(
+            json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
     if args.errors:
         write_errors(Path(args.errors), errors)
     if args.resume_metrics:
-        Path(args.resume_metrics).write_text(json.dumps(resume_metrics(summary), indent=2, ensure_ascii=False), encoding="utf-8")
+        Path(args.resume_metrics).write_text(
+            json.dumps(resume_metrics(summary), indent=2, ensure_ascii=False), encoding="utf-8"
+        )
     print(json.dumps(summary, indent=2, ensure_ascii=False))
     return 0
 

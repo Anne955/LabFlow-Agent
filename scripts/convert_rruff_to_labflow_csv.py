@@ -122,11 +122,18 @@ def convert_rruff_batch(
         f"Skipped raw files: {len(skipped)}",
     ]
     (output_dir / "instrument_log.txt").write_text("\n".join(log) + "\n", encoding="utf-8")
-    return {"batch_id": batch_id, "converted": len(rows), "skipped": len(skipped), "output_dir": output_dir.as_posix()}
+    return {
+        "batch_id": batch_id,
+        "converted": len(rows),
+        "skipped": len(skipped),
+        "output_dir": output_dir.as_posix(),
+    }
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Convert local RRUFF Raman txt files to a LabFlow batch.")
+    parser = argparse.ArgumentParser(
+        description="Convert local RRUFF Raman txt files to a LabFlow batch."
+    )
     parser.add_argument("--input-dir", default="data_public/rruff_raw")
     parser.add_argument("--output-dir", default="data/batch_public_rruff_001")
     parser.add_argument("--batch-id", default="batch_public_rruff_001")

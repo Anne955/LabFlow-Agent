@@ -84,28 +84,32 @@ def build_labflow_tool_registry(context: ToolContext) -> dict[str, ToolSpec]:
     return {
         "scan_experiment_dir": ToolSpec(
             "scan_experiment_dir",
-            "Scan an experiment batch directory and identify metadata, spectra, logs, and suspicious filenames.",
+            "Scan an experiment batch directory and identify metadata, spectra, logs,"
+            " and suspicious filenames.",
             SCAN_EXPERIMENT_DIR_SCHEMA,
             False,
             labflow.tool_scan_experiment_dir,
         ),
         "inspect_table": ToolSpec(
             "inspect_table",
-            "Inspect a CSV metadata table and summarize columns, types, missing values, and duplicate sample IDs.",
+            "Inspect a CSV metadata table and summarize columns, types,"
+            " missing values, and duplicate sample IDs.",
             INSPECT_TABLE_SCHEMA,
             False,
             labflow.tool_inspect_table,
         ),
         "quality_check": ToolSpec(
             "quality_check",
-            "Run rule-based QC over metadata and spectra files, then write outputs/<batch_id>/qc_summary.csv.",
+            "Run rule-based QC over metadata and spectra files, then write"
+            " outputs/<batch_id>/qc_summary.csv.",
             QUALITY_CHECK_SCHEMA,
             False,
             labflow.tool_quality_check,
         ),
         "run_preprocess_script": ToolSpec(
             "run_preprocess_script",
-            "Run a registered preprocessing script from the LabFlow whitelist; arbitrary shell is not allowed.",
+            "Run a registered preprocessing script from the LabFlow whitelist;"
+            " arbitrary shell is not allowed.",
             RUN_PREPROCESS_SCRIPT_SCHEMA,
             True,
             labflow.tool_run_preprocess_script,

@@ -145,7 +145,8 @@ def build_plan(prompt: str) -> ToolPlan:
         steps.append(PlanStep("compare_batch_summaries", {"batch_ids": list(ids)}, kind="internal"))
     elif inputs.intent == RESUME_FAILED_WORKFLOW:
         warnings.append(
-            "resume_failed_workflow is planned from existing outputs; this minimal planner does not inspect trace state yet."
+            "resume_failed_workflow is planned from existing outputs;"
+            " this minimal planner does not inspect trace state yet."
         )
         steps = [
             PlanStep("summarize_outputs", {"batch_id": batch_id}),

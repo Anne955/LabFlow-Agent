@@ -29,7 +29,8 @@ class LabFlowReportTests(unittest.TestCase):
             qc.parent.mkdir(parents=True)
             qc.write_text(
                 "finding_id,batch_id,sample_id,file,check,severity,status,message,evidence\n"
-                "F0001,batch_demo_001,s1,data/batch_demo_001/spectra/s1_raman.csv,negative_intensity,critical,fail,negative intensity,-1\n",
+                "F0001,batch_demo_001,s1,data/batch_demo_001/spectra/s1_raman.csv,"
+                "negative_intensity,critical,fail,negative intensity,-1\n",
                 encoding="utf-8",
             )
             result = tool_generate_report(make_context(root), {"batch_id": "batch_demo_001"})

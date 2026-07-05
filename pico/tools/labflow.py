@@ -511,8 +511,7 @@ def _run_preprocess_one(
             [sys.executable, str(script_path), str(input_path), str(output_path)],
             cwd=str(ctx.root),
             text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             timeout=120,
             check=False,
         )
@@ -712,7 +711,8 @@ def tool_generate_report(ctx: ToolContext, args: dict[str, object]) -> ToolResul
         f"- workflow log: traces/{batch_id}_workflow_log.json",
         "",
         f"## {section_title('review_advice', lang)}",
-        "- Critical findings should be reviewed against the raw instrument export before interpretation.",
+        "- Critical findings should be reviewed against the raw instrument export"
+        " before interpretation.",
         "- Re-run preprocessing only with registered scripts and preserve raw data unchanged.",
         "- Treat this report as rule-based QC evidence, not an automated scientific conclusion.",
         "",
@@ -938,7 +938,9 @@ def _check_spectrum_file(
                         str(intensity),
                     )
                 )
-    if len(xs) >= 2 and any(current <= previous for previous, current in zip(xs, xs[1:])):
+    if len(xs) >= 2 and any(
+        current <= previous for previous, current in zip(xs, xs[1:], strict=False)
+    ):
         findings.append(
             _finding(
                 ctx,
