@@ -96,3 +96,29 @@ def env_or(default: str, *names: str) -> str:
 def env_list(name: str) -> list[str]:
     value = os.environ.get(name, "")
     return [part.strip() for part in value.split(",") if part.strip()]
+
+
+DEFAULT_RETRY_MAX_RETRIES = 3
+DEFAULT_RETRY_BASE_DELAY_MS = 500
+DEFAULT_RETRY_MAX_DELAY_MS = 10_000
+
+
+def load_retry_config():
+    from .providers.retry import RetryConfig
+
+    return RetryConfig(
+        max_retries=int(env_or(str(DEFAULT_RETRY_MAX_RETRIES), "PICO_MAX_RETRIES")),
+        base_delay_ms=int(env_or(str(DEFAULT_RETRY_BASE_DELAY_MS), "PICO_RETRY_BASE_DELAY_MS")),
+        max_delay_ms=int(env_or(str(DEFAULT_RETRY_MAX_DELAY_MS), "PICO_RETRY_MAX_DELAY_MS")),
+    )
+
+
+def load_truncation_strategy():
+    name = env_or("priority", "PICO_TRUNCATION_STRATEGY")
+    if name == "smart":
+        from .context_manager import SmartTruncation
+
+        return SmartTruncation()
+    from .context_manager import PriorityTruncation
+
+    return PriorityTruncation()

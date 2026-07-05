@@ -10,7 +10,6 @@ from pico.run_store import RunStore, SessionStore
 from pico.runtime import Pico
 from pico.workspace import WorkspaceContext
 
-
 FULL_SCRIPT = [
     '<tool>{"name":"scan_experiment_dir","args":{"experiment_dir":"data/batch_demo_001","batch_id":"batch_demo_001"}}</tool>',
     '<tool>{"name":"inspect_table","args":{"path":"data/batch_demo_001/metadata.csv","max_rows":5}}</tool>',
@@ -19,7 +18,7 @@ FULL_SCRIPT = [
     '<tool>{"name":"summarize_outputs","args":{"batch_id":"batch_demo_001"}}</tool>',
     '<tool>{"name":"generate_report","args":{"batch_id":"batch_demo_001"}}</tool>',
     '<tool>{"name":"export_workflow_log","args":{"batch_id":"batch_demo_001"}}</tool>',
-    '<final>done</final>',
+    "<final>done</final>",
 ]
 
 
@@ -33,7 +32,9 @@ def seed_batch(root: Path) -> None:
     scripts = root / "scripts"
     scripts.mkdir()
     source_script = Path(__file__).resolve().parents[1] / "scripts" / "normalize_csv.py"
-    (scripts / "normalize_csv.py").write_text(source_script.read_text(encoding="utf-8"), encoding="utf-8")
+    (scripts / "normalize_csv.py").write_text(
+        source_script.read_text(encoding="utf-8"), encoding="utf-8"
+    )
 
 
 class WorkflowTraceTests(unittest.TestCase):

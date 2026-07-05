@@ -90,7 +90,9 @@ class RuntimeTests(unittest.TestCase):
             answer = pico.ask("loop")
             self.assertEqual(answer, "")
             run_dir = next((tmp_path / ".pico" / "runs").iterdir())
-            self.assertIn('"step_limit_reached"', (run_dir / "task_state.json").read_text(encoding="utf-8"))
+            self.assertIn(
+                '"step_limit_reached"', (run_dir / "task_state.json").read_text(encoding="utf-8")
+            )
 
 
 if __name__ == "__main__":

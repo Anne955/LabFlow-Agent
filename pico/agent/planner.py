@@ -7,7 +7,6 @@ from typing import Any
 from .intent import (
     COMPARE_BATCHES,
     EXPLAIN_FINDING,
-    FULL_QC_WORKFLOW,
     METADATA_ONLY,
     PREPROCESS_ONLY,
     QC_ONLY,
@@ -60,10 +59,33 @@ def parse_planner_inputs(prompt: str) -> PlannerInputs:
     batch_matches = BATCH_RE.findall(normalized)
     batch_ids = tuple(dict.fromkeys(batch_matches))
     batch_id = batch_ids[0] if batch_ids else None
-    experiment_dir = f"data/{path_matches[0]}" if path_matches else (f"data/{batch_id}" if batch_id else None)
+    experiment_dir = (
+        f"data/{path_matches[0]}" if path_matches else (f"data/{batch_id}" if batch_id else None)
+    )
     lower = prompt.lower()
-    skip_critical = not any(term in lower for term in ("不要跳过 critical", "不要跳过严重异常", "处理所有样本", "include critical", "process all samples", "do not skip critical", "no skip"))
-    only_qc_passed = any(term in lower for term in ("只处理 qc 通过", "只处理质控通过", "只预处理通过", "only qc passed", "only passed samples", "only samples that passed qc"))
+    skip_critical = not any(
+        term in lower
+        for term in (
+            "不要跳过 critical",
+            "不要跳过严重异常",
+            "处理所有样本",
+            "include critical",
+            "process all samples",
+            "do not skip critical",
+            "no skip",
+        )
+    )
+    only_qc_passed = any(
+        term in lower
+        for term in (
+            "只处理 qc 通过",
+            "只处理质控通过",
+            "只预处理通过",
+            "only qc passed",
+            "only passed samples",
+            "only samples that passed qc",
+        )
+    )
     if only_qc_passed:
         skip_critical = True
     finding_match = FINDING_RE.search(prompt)
@@ -90,12 +112,16 @@ def build_plan(prompt: str) -> ToolPlan:
 
     if inputs.intent == METADATA_ONLY:
         steps = [
-            PlanStep("scan_experiment_dir", {"experiment_dir": experiment_dir, "batch_id": batch_id}),
+            PlanStep(
+                "scan_experiment_dir", {"experiment_dir": experiment_dir, "batch_id": batch_id}
+            ),
             PlanStep("inspect_table", {"path": f"{experiment_dir}/metadata.csv", "max_rows": 5}),
         ]
     elif inputs.intent == QC_ONLY:
         steps = [
-            PlanStep("scan_experiment_dir", {"experiment_dir": experiment_dir, "batch_id": batch_id}),
+            PlanStep(
+                "scan_experiment_dir", {"experiment_dir": experiment_dir, "batch_id": batch_id}
+            ),
             PlanStep("quality_check", {"experiment_dir": experiment_dir, "batch_id": batch_id}),
             PlanStep("summarize_outputs", {"batch_id": batch_id}),
             PlanStep("export_workflow_log", {"batch_id": batch_id}),
@@ -118,7 +144,10 @@ def build_plan(prompt: str) -> ToolPlan:
         steps = [PlanStep("summarize_outputs", {"batch_id": item}) for item in ids]
         steps.append(PlanStep("compare_batch_summaries", {"batch_ids": list(ids)}, kind="internal"))
     elif inputs.intent == RESUME_FAILED_WORKFLOW:
-        warnings.append("resume_failed_workflow is planned from existing outputs; this minimal planner does not inspect trace state yet.")
+        warnings.append(
+            "resume_failed_workflow is planned from existing outputs;"
+            " this minimal planner does not inspect trace state yet."
+        )
         steps = [
             PlanStep("summarize_outputs", {"batch_id": batch_id}),
             _preprocess_step(batch_id, experiment_dir, inputs),
@@ -138,10 +167,14 @@ def build_plan(prompt: str) -> ToolPlan:
     else:
         steps = _full_workflow_steps(batch_id, experiment_dir, inputs)
 
-    return ToolPlan(intent=inputs.intent, inputs=inputs, steps=tuple(steps), warnings=tuple(warnings))
+    return ToolPlan(
+        intent=inputs.intent, inputs=inputs, steps=tuple(steps), warnings=tuple(warnings)
+    )
 
 
-def _full_workflow_steps(batch_id: str, experiment_dir: str, inputs: PlannerInputs) -> list[PlanStep]:
+def _full_workflow_steps(
+    batch_id: str, experiment_dir: str, inputs: PlannerInputs
+) -> list[PlanStep]:
     return [
         PlanStep("scan_experiment_dir", {"experiment_dir": experiment_dir, "batch_id": batch_id}),
         PlanStep("inspect_table", {"path": f"{experiment_dir}/metadata.csv", "max_rows": 5}),
@@ -167,3 +200,16 @@ def _preprocess_step(batch_id: str, experiment_dir: str, inputs: PlannerInputs) 
             "only_qc_passed": inputs.only_qc_passed,
         },
     )
+
+
+def render_plan(plan: ToolPlan) -> str:
+    """Render a ToolPlan as a concise suggested-step list for the prompt."""
+    if not plan.steps:
+        return ""
+    lines = [f"Intent: {plan.intent}", "Suggested steps (advisory — you may deviate):"]
+    for idx, step in enumerate(plan.steps, start=1):
+        detail = step.description or step.name
+        lines.append(f"{idx}. {step.kind}: {detail}")
+    if plan.warnings:
+        lines.append("Warnings: " + "; ".join(plan.warnings))
+    return "\n".join(lines)

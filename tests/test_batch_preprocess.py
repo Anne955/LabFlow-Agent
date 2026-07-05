@@ -21,7 +21,10 @@ def make_context(root: Path) -> ToolContext:
 
 def write_spectrum(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("x,intensity\n" + "\n".join(f"{idx},{idx + 10}" for idx in range(1, 13)) + "\n", encoding="utf-8")
+    path.write_text(
+        "x,intensity\n" + "\n".join(f"{idx},{idx + 10}" for idx in range(1, 13)) + "\n",
+        encoding="utf-8",
+    )
 
 
 class BatchPreprocessTests(unittest.TestCase):
@@ -31,15 +34,23 @@ class BatchPreprocessTests(unittest.TestCase):
             batch = root / "data" / "batch_demo_001"
             spectra = batch / "spectra"
             spectra.mkdir(parents=True)
-            (batch / "metadata.csv").write_text("sample_id,method\nsample_001,raman\nsample_002,raman\n", encoding="utf-8")
+            (batch / "metadata.csv").write_text(
+                "sample_id,method\nsample_001,raman\nsample_002,raman\n", encoding="utf-8"
+            )
             write_spectrum(spectra / "sample_001_raman.csv")
-            (spectra / "sample_002_raman.csv").write_text("x,intensity\n1,-1\n2,2\n", encoding="utf-8")
+            (spectra / "sample_002_raman.csv").write_text(
+                "x,intensity\n1,-1\n2,2\n", encoding="utf-8"
+            )
             scripts = root / "scripts"
             scripts.mkdir()
             source_script = Path(__file__).resolve().parents[1] / "scripts" / "normalize_csv.py"
-            (scripts / "normalize_csv.py").write_text(source_script.read_text(encoding="utf-8"), encoding="utf-8")
+            (scripts / "normalize_csv.py").write_text(
+                source_script.read_text(encoding="utf-8"), encoding="utf-8"
+            )
             ctx = make_context(root)
-            qc_result = tool_quality_check(ctx, {"experiment_dir": "data/batch_demo_001", "batch_id": "batch_demo_001"})
+            qc_result = tool_quality_check(
+                ctx, {"experiment_dir": "data/batch_demo_001", "batch_id": "batch_demo_001"}
+            )
             self.assertTrue(qc_result.ok)
             result = tool_run_preprocess_script(
                 ctx,

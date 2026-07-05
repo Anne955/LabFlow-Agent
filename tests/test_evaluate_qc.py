@@ -30,7 +30,10 @@ class EvaluateQCTests(unittest.TestCase):
                 encoding="utf-8",
             )
             labels = root / "labels.json"
-            labels.write_text(json.dumps({"labels": [{"sample_id": "s1", "check": "negative_intensity"}]}), encoding="utf-8")
+            labels.write_text(
+                json.dumps({"labels": [{"sample_id": "s1", "check": "negative_intensity"}]}),
+                encoding="utf-8",
+            )
             self.assertEqual(load_predictions(pred), {("s1", "negative_intensity")})
             self.assertEqual(load_labels(labels), {("s1", "negative_intensity")})
 

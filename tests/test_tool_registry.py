@@ -10,7 +10,6 @@ from pico.tool_executor import ToolExecutor
 from pico.tool_registry import build_labflow_tool_registry, build_tool_registry
 from pico.workspace import resolve_in_workspace
 
-
 EXPECTED_TOOLS = {
     "scan_experiment_dir",
     "inspect_table",
@@ -55,7 +54,9 @@ class LabFlowToolRegistryTests(unittest.TestCase):
     def test_unknown_coding_tool_is_not_available_in_labflow_mode(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
-            executor = ToolExecutor(build_tool_registry(make_context(root)), make_context(root), approval="auto")
+            executor = ToolExecutor(
+                build_tool_registry(make_context(root)), make_context(root), approval="auto"
+            )
             result = executor.execute("run_shell", {"command": "python --version"})
             self.assertFalse(result.ok)
             self.assertEqual(result.error_code, "unknown_tool")

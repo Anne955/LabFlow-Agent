@@ -17,7 +17,7 @@ class FileSummary:
         return {"path": self.path, "summary": self.summary, "freshness": self.freshness}
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "FileSummary":
+    def from_dict(cls, data: dict[str, Any]) -> FileSummary:
         return cls(str(data["path"]), str(data.get("summary", "")), str(data.get("freshness", "")))
 
 
@@ -31,8 +31,12 @@ class EpisodicNote:
         return {"text": self.text, "tags": self.tags, "source": self.source}
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "EpisodicNote":
-        return cls(str(data.get("text", "")), list(data.get("tags", [])), str(data.get("source", "runtime")))
+    def from_dict(cls, data: dict[str, Any]) -> EpisodicNote:
+        return cls(
+            str(data.get("text", "")),
+            list(data.get("tags", [])),
+            str(data.get("source", "runtime")),
+        )
 
 
 @dataclass
@@ -61,7 +65,9 @@ class LayeredMemory:
         self.file_summaries.pop(path, None)
         self.remember_file(path)
 
-    def append_note(self, text: str, tags: list[str] | None = None, source: str = "runtime") -> None:
+    def append_note(
+        self, text: str, tags: list[str] | None = None, source: str = "runtime"
+    ) -> None:
         self.episodic_notes.insert(0, EpisodicNote(text.strip(), tags or [], source))
         del self.episodic_notes[self.max_notes :]
 
@@ -81,7 +87,9 @@ class LayeredMemory:
         if self.task_summary:
             sections.append(f"## Working task\n{self.task_summary}")
         if self.recent_files:
-            sections.append("## Recent files\n" + "\n".join(f"- {path}" for path in self.recent_files[:5]))
+            sections.append(
+                "## Recent files\n" + "\n".join(f"- {path}" for path in self.recent_files[:5])
+            )
         fresh_summaries = []
         for path, summary in sorted(self.file_summaries.items()):
             current = root / path
@@ -91,19 +99,23 @@ class LayeredMemory:
             sections.append("## File summaries\n" + "\n".join(fresh_summaries[:8]))
         candidates = self.retrieval_candidates(query) if query else self.episodic_notes[:3]
         if candidates:
-            sections.append("## Relevant notes\n" + "\n".join(f"- {note.text}" for note in candidates))
+            sections.append(
+                "## Relevant notes\n" + "\n".join(f"- {note.text}" for note in candidates)
+            )
         return "\n\n".join(sections)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "task_summary": self.task_summary,
             "recent_files": self.recent_files,
-            "file_summaries": {path: summary.to_dict() for path, summary in self.file_summaries.items()},
+            "file_summaries": {
+                path: summary.to_dict() for path, summary in self.file_summaries.items()
+            },
             "episodic_notes": [note.to_dict() for note in self.episodic_notes],
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any] | None) -> "LayeredMemory":
+    def from_dict(cls, data: dict[str, Any] | None) -> LayeredMemory:
         if not data:
             return cls()
         memory = cls(task_summary=str(data.get("task_summary", "")))
@@ -112,12 +124,19 @@ class LayeredMemory:
             str(path): FileSummary.from_dict(summary)
             for path, summary in dict(data.get("file_summaries", {})).items()
         }
-        memory.episodic_notes = [EpisodicNote.from_dict(note) for note in data.get("episodic_notes", [])]
+        memory.episodic_notes = [
+            EpisodicNote.from_dict(note) for note in data.get("episodic_notes", [])
+        ]
         return memory
 
 
 class DurableMemoryStore:
-    TOPICS = ("project-conventions.md", "key-decisions.md", "dependency-facts.md", "user-preferences.md")
+    TOPICS = (
+        "project-conventions.md",
+        "key-decisions.md",
+        "dependency-facts.md",
+        "user-preferences.md",
+    )
 
     def __init__(self, root: Path):
         self.root = root / ".pico" / "memory"
@@ -131,7 +150,9 @@ class DurableMemoryStore:
         for topic in self.TOPICS:
             path = self.topics / topic
             if not path.exists():
-                path.write_text(f"# {topic.removesuffix('.md').replace('-', ' ').title()}\n\n", encoding="utf-8")
+                path.write_text(
+                    f"# {topic.removesuffix('.md').replace('-', ' ').title()}\n\n", encoding="utf-8"
+                )
 
     def read_all(self, max_chars: int = 3000) -> str:
         self.ensure()

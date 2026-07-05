@@ -16,4 +16,4 @@ class ToolContext:
     shell_env_provider: Callable[[], dict[str, str]]
     depth: int = 0
     max_depth: int = 1
-    spawn_delegate: Callable[[str, int], "ToolResult"] | None = None
+    spawn_delegate: Callable[[str, int], ToolResult] | None = None

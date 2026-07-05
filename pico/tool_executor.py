@@ -4,8 +4,10 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
+from .errors import SafetyViolationError, ToolExecutionError
 from .tool_context import ToolContext
-from .tools import ToolResult, ToolSpec, shell_command_signature, validate_tool_args
+from .tools import ToolResult, ToolSpec
+from .tools.base import shell_command_signature, validate_tool_args
 
 ApprovalCallback = Callable[[ToolSpec, dict[str, Any]], bool]
 
@@ -44,19 +46,32 @@ class ToolExecutor:
         self.last_signature = signature
         try:
             return spec.runner(self.context, args)
+        except SafetyViolationError:
+            raise
+        except ToolExecutionError as exc:
+            return ToolResult(False, str(exc), error_code=exc.error_code)
         except ValueError as exc:
             return ToolResult(False, str(exc), error_code="path_escape")
-        except Exception as exc:  # noqa: BLE001 - tool boundary must convert failures to observations
+        except Exception as exc:  # noqa: BLE001 - tool boundary isolates unexpected failures
+            self.events.append({"level": "warning", "name": name, "error": f"unexpected: {exc!r}"})
             return ToolResult(False, f"tool failed: {exc}", error_code="tool_exception")
 
     def _approval_error(self, spec: ToolSpec, args: dict[str, Any]) -> ToolResult | None:
         if self.read_only:
-            return ToolResult(False, f"risky tool blocked in read-only mode: {spec.name}", error_code="read_only")
+            return ToolResult(
+                False, f"risky tool blocked in read-only mode: {spec.name}", error_code="read_only"
+            )
         if self.approval == "never":
-            return ToolResult(False, f"risky tool blocked by approval policy: {spec.name}", error_code="approval_denied")
+            return ToolResult(
+                False,
+                f"risky tool blocked by approval policy: {spec.name}",
+                error_code="approval_denied",
+            )
         if self.approval == "auto":
             return None
         approved = self.approval_callback(spec, args) if self.approval_callback else False
         if not approved:
-            return ToolResult(False, f"risky tool not approved: {spec.name}", error_code="approval_denied")
+            return ToolResult(
+                False, f"risky tool not approved: {spec.name}", error_code="approval_denied"
+            )
         return None

@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from scripts.convert_rruff_to_labflow_csv import convert_rruff_batch, main, parse_rruff_txt
+from scripts.convert_rruff_to_labflow_csv import convert_rruff_batch, parse_rruff_txt
 
 
 def write_raw(path: Path, offset: int = 0) -> None:
@@ -51,7 +51,18 @@ class RruffConverterTests(unittest.TestCase):
             with metadata.open("r", encoding="utf-8", newline="") as handle:
                 rows = list(csv.DictReader(handle))
             self.assertEqual(len(rows), 20)
-            self.assertEqual(set(rows[0]), {"sample_id", "method", "instrument", "operator", "file_path", "source_dataset", "source_id"})
+            self.assertEqual(
+                set(rows[0]),
+                {
+                    "sample_id",
+                    "method",
+                    "instrument",
+                    "operator",
+                    "file_path",
+                    "source_dataset",
+                    "source_id",
+                },
+            )
             self.assertEqual(rows[0]["method"], "raman")
             for row in rows:
                 self.assertTrue((output / row["file_path"]).is_file())

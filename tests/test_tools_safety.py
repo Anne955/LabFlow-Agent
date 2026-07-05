@@ -9,17 +9,21 @@ from tempfile import TemporaryDirectory
 from pico.security import safe_shell_env
 from pico.tool_context import ToolContext
 from pico.tool_executor import ToolExecutor
-from pico.tools import build_tool_registry as build_legacy_tool_registry
+from pico.tools import build_generic_tool_registry as build_legacy_tool_registry
 from pico.workspace import resolve_in_workspace
 
 
-def make_executor(tmp_path: Path, *, approval: str = "auto", read_only: bool = False) -> ToolExecutor:
+def make_executor(
+    tmp_path: Path, *, approval: str = "auto", read_only: bool = False
+) -> ToolExecutor:
     ctx = ToolContext(
         root=tmp_path,
         path_resolver=lambda raw: resolve_in_workspace(tmp_path, raw),
         shell_env_provider=safe_shell_env,
     )
-    return ToolExecutor(build_legacy_tool_registry(ctx), context=ctx, approval=approval, read_only=read_only)
+    return ToolExecutor(
+        build_legacy_tool_registry(ctx), context=ctx, approval=approval, read_only=read_only
+    )
 
 
 class ToolSafetyTests(unittest.TestCase):
@@ -52,7 +56,9 @@ class ToolSafetyTests(unittest.TestCase):
             tmp_path = Path(directory)
             (tmp_path / "a.txt").write_text("old old", encoding="utf-8")
             executor = make_executor(tmp_path)
-            result = executor.execute("patch_file", {"path": "a.txt", "old_text": "old", "new_text": "new"})
+            result = executor.execute(
+                "patch_file", {"path": "a.txt", "old_text": "old", "new_text": "new"}
+            )
             self.assertFalse(result.ok)
             self.assertEqual(result.error_code, "ambiguous_patch")
 
@@ -73,7 +79,10 @@ class ToolSafetyTests(unittest.TestCase):
             os.environ["SECRET_TOKEN"] = "supersecretvalue"
             try:
                 executor = make_executor(tmp_path)
-                command = f"{sys.executable} -c \"import os; print(os.environ.get('SECRET_TOKEN', 'missing'))\""
+                command = (
+                    f"{sys.executable} -c "
+                    f"\"import os; print(os.environ.get('SECRET_TOKEN', 'missing'))\""
+                )
                 result = executor.execute("run_shell", {"command": command})
                 self.assertTrue(result.ok)
                 self.assertIn("missing", result.text)

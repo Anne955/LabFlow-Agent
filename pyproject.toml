@@ -21,11 +21,14 @@ labflow-agent = "pico.cli:main"
 pico = "pico.cli:main"
 
 [tool.setuptools]
-packages = ["pico", "pico.providers", "pico.features", "pico.evaluation", "pico.safety", "pico.agent"]
+packages = ["pico", "pico.providers", "pico.features", "pico.evaluation", "pico.safety", "pico.agent", "pico.tools"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "integration: provider contract tests (deselect with '-m \"not integration\"'; run with PICO_RUN_INTEGRATION=1)",
+]
 
 [tool.ruff]
 line-length = 100

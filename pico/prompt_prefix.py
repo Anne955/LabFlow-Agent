@@ -4,7 +4,8 @@ import hashlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from .tools import ToolSpec, tool_signature
+from .tools import ToolSpec
+from .tools.base import tool_signature
 from .workspace import WorkspaceContext
 
 
@@ -21,19 +22,26 @@ def build_prompt_prefix(workspace: WorkspaceContext, tools: dict[str, ToolSpec])
     signature = tool_signature(tools)
     workspace_fingerprint = workspace.fingerprint()
     tool_docs = render_tool_docs(tools)
-    text = f"""You are LabFlow Agent, a local scientific-data workflow assistant for experimental batch QC.
+    text = f"""You are LabFlow Agent, a local scientific-data workflow \
+assistant for experimental batch QC.
 
 Rules:
 - Work inside the workspace only.
 - Treat raw experiment data under data/raw or data/batch_* as read-only evidence.
-- Use LabFlow tools to scan experiment directories, inspect metadata tables, run rule-based quality checks, call whitelisted preprocessing scripts, summarize outputs, generate reports, and export workflow logs.
+- Use LabFlow tools to scan experiment directories, inspect metadata \
+tables, run rule-based quality checks, call whitelisted preprocessing \
+scripts, summarize outputs, generate reports, and export workflow logs.
 - Write derived artifacts only to outputs/, reports/, or traces/ through approved LabFlow tools.
 - Do not use arbitrary shell commands or direct code-editing actions for scientific workflow tasks.
-- Do not claim scientific conclusions beyond the configured checks; report findings as rule-based QC observations that require human review.
+- Do not claim scientific conclusions beyond the configured checks; \
+report findings as rule-based QC observations that require human review.
 - Return exactly one <tool>...</tool> call or one <final>...</final> answer per turn.
-- Tool calls must be JSON: <tool>{{"name":"scan_experiment_dir","args":{{"experiment_dir":"data/batch_demo_001"}}}}</tool>
-- Do not claim that a file, report, or derived artifact was created unless a tool result confirms it.
-- Risky tools may be rejected by policy; recover by explaining the constraint or choosing a safe action.
+- Tool calls must be JSON: \
+<tool>{{"name":"scan_experiment_dir","args":{{"experiment_dir":"data/batch_demo_001"}}}}</tool>
+- Do not claim that a file, report, or derived artifact was created \
+unless a tool result confirms it.
+- Risky tools may be rejected by policy; recover by explaining the \
+constraint or choosing a safe action.
 
 {tool_docs}
 

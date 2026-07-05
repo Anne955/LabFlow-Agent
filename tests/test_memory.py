@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import unittest
-from tempfile import TemporaryDirectory
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from pico.features.memory import LayeredMemory
 from pico.workspace import file_freshness

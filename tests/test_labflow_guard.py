@@ -42,7 +42,9 @@ class LabFlowGuardTests(unittest.TestCase):
             root = Path(directory)
             (root / "scripts").mkdir()
             (root / "scripts" / "normalize_csv.py").write_text("", encoding="utf-8")
-            self.assertEqual(resolve_registered_script(root, "normalize_csv.py").name, "normalize_csv.py")
+            self.assertEqual(
+                resolve_registered_script(root, "normalize_csv.py").name, "normalize_csv.py"
+            )
             with self.assertRaises(ValueError):
                 resolve_registered_script(root, "../normalize_csv.py")
             with self.assertRaises(ValueError):
@@ -54,7 +56,9 @@ class LabFlowGuardTests(unittest.TestCase):
             scripts = root / "scripts"
             scripts.mkdir()
             source_script = Path(__file__).resolve().parents[1] / "scripts" / "normalize_csv.py"
-            (scripts / "normalize_csv.py").write_text(source_script.read_text(encoding="utf-8"), encoding="utf-8")
+            (scripts / "normalize_csv.py").write_text(
+                source_script.read_text(encoding="utf-8"), encoding="utf-8"
+            )
             raw = root / "data" / "batch_demo_001" / "spectra" / "s1_raman.csv"
             raw.parent.mkdir(parents=True)
             raw.write_text(" x , intensity \n 1 , 2 \n", encoding="utf-8")
@@ -68,7 +72,9 @@ class LabFlowGuardTests(unittest.TestCase):
                 },
             )
             self.assertTrue(result.ok)
-            output = root / "outputs" / "batch_demo_001" / "preprocessed" / "s1_raman_normalized.csv"
+            output = (
+                root / "outputs" / "batch_demo_001" / "preprocessed" / "s1_raman_normalized.csv"
+            )
             self.assertTrue(output.is_file())
             self.assertIn("x,intensity", output.read_text(encoding="utf-8"))
             self.assertEqual(raw.read_text(encoding="utf-8"), " x , intensity \n 1 , 2 \n")
