@@ -37,9 +37,9 @@
 - `complete_stream()` + `--stream` flag (final-answer replay streaming).
 - Real-client `complete_stream` SSE/NDJSON line parsers extracted to module-level functions (`parse_ollama_stream_line`, `parse_openai_stream_line`, `parse_anthropic_stream_line`) and covered by fixture-based unit tests.
 - `run_summary` trace event; `scripts/summarize_traces.py`; `--with-runtime-metrics`.
+- `--lang zh|en` CLI flag now available; threads CLI → `Pico.report_lang` → `ToolContext.default_report_lang` → `generate_report` default. The `generate_report` tool's `lang` argument still takes precedence when passed.
 - `CONTRIBUTING.md`, this changelog, README updates.
 
 ### Known limitations
 - `complete_stream()` is provisional: the runtime does not invoke it (the `--stream` flag replays the assembled final answer) and the streaming HTTP path does not use `with_retry`. The real-client SSE/NDJSON line parsers are unit-tested in `tests/test_followup2_stream_parsers.py`.
 - `--stream` replays the assembled final answer rather than parsing `<final>` from a live token stream.
-- `--lang` is not yet exposed as a CLI flag; report language is set via the `generate_report` tool argument. A `--lang` CLI option is future work.

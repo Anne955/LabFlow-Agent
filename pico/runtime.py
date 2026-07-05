@@ -55,6 +55,7 @@ class Pico:
     current_batch_id: str | None = None
     use_planner: bool = True
     tool_summaries: list[dict[str, Any]] = field(default_factory=list)
+    report_lang: str = "zh"
 
     @classmethod
     def from_session(
@@ -274,6 +275,7 @@ class Pico:
             depth=self.depth,
             max_depth=self.max_depth,
             spawn_delegate=self.spawn_delegate,
+            default_report_lang=self.report_lang,
         )
 
     def run_tool(self, name: str, args: dict[str, Any]) -> ToolResult:
@@ -315,6 +317,7 @@ class Pico:
             depth=self.depth + 1,
             max_depth=self.max_depth,
             secret_env_names=self.secret_env_names,
+            report_lang=self.report_lang,
         )
         answer = child.ask(task)
         return ToolResult(True, answer, metadata={"delegate_depth": child.depth})

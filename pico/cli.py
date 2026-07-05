@@ -66,6 +66,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Stream the final answer to the terminal token-by-token",
     )
+    parser.add_argument(
+        "--lang",
+        choices=["zh", "en"],
+        default="zh",
+        help="Report language (default zh)",
+    )
     return parser
 
 
@@ -139,6 +145,7 @@ def build_agent(args: argparse.Namespace) -> Pico:
                 max_new_tokens=args.max_new_tokens,
                 secret_env_names=secret_names,
                 use_planner=not args.no_planner,
+                report_lang=args.lang,
             )
     return Pico(
         workspace=workspace,
@@ -152,6 +159,7 @@ def build_agent(args: argparse.Namespace) -> Pico:
         max_new_tokens=args.max_new_tokens,
         secret_env_names=secret_names,
         use_planner=not args.no_planner,
+        report_lang=args.lang,
     )
 
 
