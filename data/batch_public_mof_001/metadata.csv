@@ -1,0 +1,3 @@
+sample_id,method,instrument,operator,source
+HKUST-1,raman,Bruker,IBM,uRaman-Dataset (CDLA-Sharing-1.0)
+Mg-MOF74,raman,Bruker,IBM,uRaman-Dataset (CDLA-Sharing-1.0)

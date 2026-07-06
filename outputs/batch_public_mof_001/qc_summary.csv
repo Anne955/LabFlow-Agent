@@ -1,0 +1,8 @@
+finding_id,batch_id,sample_id,file,check,severity,status,message,evidence
+F0001,batch_public_mof_001,metadata,data/batch_public_mof_001/metadata.csv,invalid_filename,warning,fail,filename should match sample_id_method.csv,metadata.csv
+F0002,batch_public_mof_001,metadata,data/batch_public_mof_001/metadata.csv,file_without_metadata,critical,fail,spectra file has no matching metadata record,metadata.csv
+F0003,batch_public_mof_001,metadata,data/batch_public_mof_001/metadata.csv,missing_spectrum_column,critical,fail,required spectra column is missing: x,x
+F0004,batch_public_mof_001,metadata,data/batch_public_mof_001/metadata.csv,missing_spectrum_column,critical,fail,required spectra column is missing: intensity,intensity
+F0005,batch_public_mof_001,metadata,data/batch_public_mof_001/metadata.csv,too_few_points,warning,fail,spectra has too few points: 2,2
+F0006,batch_public_mof_001,HKUST-1,data/batch_public_mof_001/HKUST-1_*.csv,missing_spectra_file,critical,fail,metadata sample has no corresponding spectra CSV,
+F0007,batch_public_mof_001,Mg-MOF74,data/batch_public_mof_001/Mg-MOF74_*.csv,missing_spectra_file,critical,fail,metadata sample has no corresponding spectra CSV,

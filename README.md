@@ -93,6 +93,16 @@ data_public/rruff_raw/
 
 These text files mimic public RRUFF Raman exports with header/comment lines plus numeric Raman shift and intensity pairs. They are included so the converter and LabFlow workflow can be verified without relying on external APIs or network access. Users may replace or extend them with locally downloaded public RRUFF Raman `.txt` files.
 
+### Real public Raman data (IBM uRaman-Dataset)
+
+For cross-validation against non-synthetic data, `data/batch_public_mof_001/` contains
+two real Metal-Organic-Framework Raman spectra (HKUST-1, Mg-MOF74) from the
+[IBM/uRaman-Dataset](https://github.com/IBM/uRaman-Dataset) (CDLA-Sharing-1.0 license).
+This batch runs through the full LabFlow QC workflow like any synthetic batch and
+surfaced a real calibration gap: baseline-corrected research data contains negative
+intensities that the `negative_intensity` rule (correct for raw data) flags as critical.
+See [`docs/real-data-cross-validation.md`](docs/real-data-cross-validation.md) for the full report.
+
 Convert the raw fixture into a LabFlow batch:
 
 ```bash

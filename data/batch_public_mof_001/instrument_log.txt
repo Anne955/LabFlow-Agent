@@ -1,0 +1,4 @@
+Instrument: Bruker Raman (real public dataset export)
+Source: IBM/uRaman-Dataset (GitHub), CDLA-Sharing-1.0 license
+Compounds: HKUST-1, Mg-MOF74 (Metal-Organic Frameworks)
+Note: Real public Raman spectra for cross-validation.
