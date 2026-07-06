@@ -614,7 +614,7 @@ def tool_summarize_outputs(ctx: ToolContext, args: dict[str, object]) -> ToolRes
 
 def tool_generate_report(ctx: ToolContext, args: dict[str, object]) -> ToolResult:
     batch_id = sanitize_batch_id(str(args["batch_id"]))
-    lang = str(args.get("lang") or "zh")
+    lang = str(args.get("lang") or getattr(ctx, "default_report_lang", "zh"))
     qc_path = (
         ctx.path_resolver(str(args["findings_path"]))
         if args.get("findings_path")
