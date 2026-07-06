@@ -1,8 +1,15 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 import pytest
+
+# Load .env from the repo root so integration tests pick up provider credentials
+# without requiring them to be exported into the shell environment.
+from pico.config import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parents[2])
 
 
 def pytest_collection_modifyitems(config, items):

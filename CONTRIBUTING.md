@@ -40,3 +40,6 @@ pytest tests/ -v -W ignore::DeprecationWarning
 ## Integration tests
 
 Set `PICO_RUN_INTEGRATION=1` and the relevant provider credentials to run `tests/integration/`.
+Provider credentials are read from the environment; a repo-root `.env` file is
+auto-loaded by `tests/integration/conftest.py`, so you can put `PICO_OPENAI_API_KEY`
+etc. there instead of exporting them into your shell. `.env` is gitignored.
