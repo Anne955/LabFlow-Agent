@@ -4,11 +4,11 @@
   "sample_records": 105,
   "anomaly_types": null,
   "labeled_findings": 55,
-  "predicted_findings": 50,
+  "predicted_findings": 55,
   "precision": 1.0,
-  "recall": 0.9090909090909091,
-  "f1": 0.9523809523809523,
+  "recall": 1.0,
+  "f1": 1.0,
   "report_field_coverage": 1.0,
   "raw_data_miswrite_count": 0,
-  "average_processing_seconds": 2.2833147800061853
+  "average_processing_seconds": 0.017742819990962742
 }

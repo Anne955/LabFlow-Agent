@@ -2,13 +2,13 @@
   "batch_count": 5,
   "sample_count": 105,
   "expected_count": 55,
-  "predicted_count": 50,
-  "true_positive": 50,
+  "predicted_count": 55,
+  "true_positive": 55,
   "false_positive": 0,
-  "false_negative": 5,
+  "false_negative": 0,
   "precision": 1.0,
-  "recall": 0.9090909090909091,
-  "f1": 0.9523809523809523,
+  "recall": 1.0,
+  "f1": 1.0,
   "end_to_end_task_completed": true,
   "report_field_coverage": {
     "average_coverage": 1.0,
@@ -16,83 +16,103 @@
     "missing_by_batch": {}
   },
   "raw_data_miswrite_count": 0,
-  "average_processing_seconds": 2.2833147800061853,
-  "total_processing_seconds": 11.416573900030926,
+  "average_processing_seconds": 0.017742819990962742,
+  "total_processing_seconds": 0.08871409995481372,
   "per_batch": [
     {
       "batch_id": "batch_demo_001",
-      "true_positive": 10,
+      "true_positive": 11,
       "false_positive": 0,
-      "false_negative": 1,
+      "false_negative": 0,
       "precision": 1.0,
-      "recall": 0.9090909090909091,
-      "f1": 0.9523809523809523,
-      "predicted_count": 10,
+      "recall": 1.0,
+      "f1": 1.0,
+      "predicted_count": 11,
       "expected_count": 11,
       "sample_count": 21,
       "completed": true,
-      "processing_seconds": 2.2223269999958575,
-      "report_coverage": 1.0
+      "processing_seconds": 0.011930100037716329,
+      "report_coverage": 1.0,
+      "runtime": {
+        "event_count": 1,
+        "total_duration_seconds": 0.011930100037716329
+      }
     },
     {
       "batch_id": "batch_demo_002",
-      "true_positive": 10,
+      "true_positive": 11,
       "false_positive": 0,
-      "false_negative": 1,
+      "false_negative": 0,
       "precision": 1.0,
-      "recall": 0.9090909090909091,
-      "f1": 0.9523809523809523,
-      "predicted_count": 10,
+      "recall": 1.0,
+      "f1": 1.0,
+      "predicted_count": 11,
       "expected_count": 11,
       "sample_count": 21,
       "completed": true,
-      "processing_seconds": 2.4512242000200786,
-      "report_coverage": 1.0
+      "processing_seconds": 0.017895399942062795,
+      "report_coverage": 1.0,
+      "runtime": {
+        "event_count": 1,
+        "total_duration_seconds": 0.017895399942062795
+      }
     },
     {
       "batch_id": "batch_demo_003",
-      "true_positive": 10,
+      "true_positive": 11,
       "false_positive": 0,
-      "false_negative": 1,
+      "false_negative": 0,
       "precision": 1.0,
-      "recall": 0.9090909090909091,
-      "f1": 0.9523809523809523,
-      "predicted_count": 10,
+      "recall": 1.0,
+      "f1": 1.0,
+      "predicted_count": 11,
       "expected_count": 11,
       "sample_count": 21,
       "completed": true,
-      "processing_seconds": 2.504180899995845,
-      "report_coverage": 1.0
+      "processing_seconds": 0.02449710003565997,
+      "report_coverage": 1.0,
+      "runtime": {
+        "event_count": 1,
+        "total_duration_seconds": 0.02449710003565997
+      }
     },
     {
       "batch_id": "batch_demo_004",
-      "true_positive": 10,
+      "true_positive": 11,
       "false_positive": 0,
-      "false_negative": 1,
+      "false_negative": 0,
       "precision": 1.0,
-      "recall": 0.9090909090909091,
-      "f1": 0.9523809523809523,
-      "predicted_count": 10,
+      "recall": 1.0,
+      "f1": 1.0,
+      "predicted_count": 11,
       "expected_count": 11,
       "sample_count": 21,
       "completed": true,
-      "processing_seconds": 2.275435399962589,
-      "report_coverage": 1.0
+      "processing_seconds": 0.016597599955275655,
+      "report_coverage": 1.0,
+      "runtime": {
+        "event_count": 1,
+        "total_duration_seconds": 0.016597599955275655
+      }
     },
     {
       "batch_id": "batch_demo_005",
-      "true_positive": 10,
+      "true_positive": 11,
       "false_positive": 0,
-      "false_negative": 1,
+      "false_negative": 0,
       "precision": 1.0,
-      "recall": 0.9090909090909091,
-      "f1": 0.9523809523809523,
-      "predicted_count": 10,
+      "recall": 1.0,
+      "f1": 1.0,
+      "predicted_count": 11,
       "expected_count": 11,
       "sample_count": 21,
       "completed": true,
-      "processing_seconds": 1.9634064000565559,
-      "report_coverage": 1.0
+      "processing_seconds": 0.01779389998409897,
+      "report_coverage": 1.0,
+      "runtime": {
+        "event_count": 1,
+        "total_duration_seconds": 0.01779389998409897
+      }
     }
   ]
 }

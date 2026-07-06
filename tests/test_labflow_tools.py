@@ -108,6 +108,30 @@ class LabFlowToolsTests(unittest.TestCase):
             self.assertIn("missing_spectra_file", text)
             self.assertIn("missing_spectrum_column", text)
 
+    def test_extreme_intensity_outlier_is_detected_despite_inflated_stdev(self):
+        # A single extreme outlier (100000 among ~125s) inflates the population
+        # stdev so much that a naive 6-sigma test misses it. The check must use
+        # a robust statistic (MAD) so the outlier is caught.
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            batch = root / "data" / "batch_x"
+            spectra = batch / "spectra"
+            spectra.mkdir(parents=True)
+            write_csv(
+                batch / "metadata.csv",
+                [{"sample_id": "s1", "method": "raman"}],
+                ["sample_id", "method"],
+            )
+            rows = [{"x": i, "intensity": 120 + i} for i in range(1, 12)]
+            rows.insert(7, {"x": 8, "intensity": 100000})  # idx 8: extreme outlier
+            write_csv(spectra / "s1_raman.csv", rows, ["x", "intensity"])
+
+            tool_quality_check(make_context(root), {"experiment_dir": "data/batch_x"})
+
+            qc_path = root / "outputs" / "batch_x" / "qc_summary.csv"
+            text = qc_path.read_text(encoding="utf-8")
+            self.assertIn("extreme_intensity", text)
+
 
 if __name__ == "__main__":
     unittest.main()

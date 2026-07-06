@@ -800,6 +800,19 @@ def _to_float(value: object) -> float | None:
     return number
 
 
+def _mad_sigma(values: list[float], median: float) -> float:
+    """Robust sigma estimate from the median absolute deviation.
+
+    Returns 0.0 for series too small or degenerate (e.g. constant data) for a
+    stable MAD; callers should treat 0.0 as "no usable robust estimate".
+    """
+    if len(values) <= 4:
+        return 0.0
+    abs_devs = [abs(value - median) for value in values]
+    mad = statistics.median(abs_devs)
+    return mad * 1.4826 if mad else 0.0
+
+
 def _sample_id_from_name(path: Path) -> str:
     stem = path.stem
     return stem.rsplit("_", 1)[0] if "_" in stem else stem
@@ -955,7 +968,22 @@ def _check_spectrum_file(
     if intensities:
         mean = statistics.fmean(intensities)
         stdev = statistics.pstdev(intensities) if len(intensities) > 1 else 0.0
-        if stdev and any(abs(value - mean) > 6 * stdev for value in intensities):
+        # Robust outlier flag: a single extreme value inflates pstdev so much
+        # that a naive 6-sigma test misses the outlier itself. Use the median
+        # absolute deviation (MAD), which is immune to the outlier, and flag
+        # points deviating > 6 robust-sigma (1.4826*MAD). Negative values are
+        # already covered by the negative_intensity rule, so exclude them from
+        # the MAD baseline to avoid double-flagging them as extreme. Fall back
+        # to the stdev test for tiny series where MAD is unstable.
+        non_neg = [value for value in intensities if value >= 0]
+        median = statistics.median(non_neg) if non_neg else mean
+        robust_sigma = _mad_sigma(non_neg, median)
+        has_outlier = False
+        if robust_sigma and any(abs(value - median) > 6 * robust_sigma for value in non_neg):
+            has_outlier = True
+        elif stdev and any(abs(value - mean) > 6 * stdev for value in non_neg):
+            has_outlier = True
+        if has_outlier:
             findings.append(
                 _finding(
                     ctx,
@@ -965,7 +993,7 @@ def _check_spectrum_file(
                     "extreme_intensity",
                     "warning",
                     "intensity contains extreme outlier",
-                    f"mean={mean:.4g};stdev={stdev:.4g}",
+                    f"mean={mean:.4g};stdev={stdev:.4g};median={median:.4g};mad_sigma={robust_sigma:.4g}",
                 )
             )
     return findings
