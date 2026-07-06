@@ -1,6 +1,12 @@
 # Changelog
 
-## [Unreleased] — 2026-07-02 systematic improvements
+## [v0.2.1] — 2026-07-02
+
+First tagged release of the systematic-improvement effort (Phases 1–4 + follow-ups) and the `extreme_intensity` QC fix.
+
+### Fixes
+- **`extreme_intensity` outlier detection** (`pico/tools/labflow.py`): the rule used population stdev (`pstdev`) for a 6-sigma threshold, but a single extreme outlier (e.g. `sample_011`: intensity `100000` among ~`125`) inflated the stdev so much that the threshold rose above the outlier itself — the outlier masked itself, causing 5 false negatives (all `sample_011` across the 5 demo batches; recall `0.909`). Switched to the **median absolute deviation (MAD)**, which is immune to the outlier; the old stdev test is kept as a fallback for tiny series. Negative values are excluded from the MAD baseline and the outlier check (already covered by `negative_intensity`) to avoid double-flagging. Added `_mad_sigma` helper + a regression test.
+  - Evaluation: P `1.0`→`1.0`, R `0.909`→**`1.0`**, F1 `0.952`→**`1.0`** (0 FP, 0 FN).
 
 ### Breaking changes
 - `ModelProviderError` now subclasses `PicoError` (which subclasses `Exception`) instead of
