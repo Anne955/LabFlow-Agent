@@ -158,6 +158,28 @@ This public batch is **not** mixed into the synthetic benchmark Precision / Reca
 - `x` 非单调递增；
 - 光谱点数过少。
 
+### QC Profiles (data-stage-aware negative intensity)
+
+`negative_intensity` 的严重度取决于数据阶段，通过 `quality_check` 的可选 `qc_profile` 参数控制：
+
+| Profile | `negative_intensity` 语义 | 适用场景 |
+|---|---|---|
+| `raw_spectrum`（默认） | 每个负值为 `critical`（原始仪器输出不应出现负值） | 原始数据，向后兼容 |
+| `processed_spectrum` | 同一谱图负值合并为单条 `warning`，说明可能来自处理（如基线扣除） | 经过处理的光谱 |
+| `baseline_corrected` | 同一谱图负值合并为单条 `warning`，说明基线校正后负值可能是预期基线噪声 | 基线校正后的光谱 |
+
+- 默认 `raw_spectrum` 保证对合成 benchmark 与历史行为完全向后兼容。
+- 非默认 profile 下，负值仍会被记录（可审计：含计数与最小值 evidence），只是不再以 `critical` 形式大量报错。
+- `qc_summary.csv` 新增 `qc_profile` 列，每条 finding 标注其使用的 profile；QC 报告的 `data_overview` 段会显示 `QC profile: <name>`，并在 `numeric_anomaly` 段附上 profile-aware 复核提示。
+
+通过工具参数使用：
+
+```text
+quality_check(experiment_dir=..., qc_profile="baseline_corrected")
+```
+
+该改进基于真实公开 MOF 拉曼数据交叉验证发现：Mg-MOF74 经过基线校正后有 989 个负 intensity，对原始数据合理的 `negative_intensity` 规则对处理后数据过严。详见 [`docs/real-data-cross-validation.md`](docs/real-data-cross-validation.md)。
+
 ## Workflow Trace
 
 一次完整 workflow 会记录 7 个核心事件：

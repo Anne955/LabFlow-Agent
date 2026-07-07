@@ -1,5 +1,33 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- **Configurable QC profiles** (`pico/tools/labflow.py`, `pico/tools/registry.py`): the
+  `quality_check` tool now accepts an optional `qc_profile` argument
+  (`raw_spectrum` (default) | `processed_spectrum` | `baseline_corrected`) that makes the
+  `negative_intensity` rule data-stage-aware.
+  - `raw_spectrum` (default) is unchanged — every negative intensity stays a per-point
+    `critical` finding (raw instrument output must not be negative). Fully backward compatible;
+    the synthetic `batch_demo_*` benchmark stays at P=R=F1=1.0.
+  - `processed_spectrum` / `baseline_corrected` collapse a spectrum's negative points into a
+    single per-spectrum `warning` with a profile-aware message, because baseline subtraction /
+    processing routinely drive noise regions below zero. Negatives are still recorded
+    (auditable count + min value in `evidence`) — only severity and explanation change.
+  - `qc_summary.csv` gains a `qc_profile` column (denormalized per row, like `batch_id`);
+    `generate_report` reads it, shows `QC profile: <name>` in the data-overview section, and
+    appends a profile-aware advisory note under numeric-anomaly when negatives are recorded
+    under a non-raw profile. Old `qc_summary.csv` files (no `qc_profile` column) render as
+    `raw_spectrum` (default).
+  - Driven by real-data cross-validation: the IBM uRaman-Dataset Mg-MOF74 spectrum
+    (baseline-corrected, 989/2768 negative points) previously produced 989 `negative_intensity`
+    critical findings; under `baseline_corrected` it now produces one auditable warning.
+
+### Notes
+- No new dependencies, no database, no agent-loop changes. The XML tool protocol stays
+  backward-compatible (`qc_profile` is optional). The `extreme_intensity` MAD fix, the raw-data
+  read-only boundary, and all other QC rules are unchanged.
+
 ## [v0.2.1] — 2026-07-02
 
 First tagged release of the systematic-improvement effort (Phases 1–4 + follow-ups) and the `extreme_intensity` QC fix.
