@@ -38,9 +38,20 @@ QC_COLUMNS = [
     "status",
     "message",
     "evidence",
+    "qc_profile",
 ]
 MIN_SPECTRA_POINTS = 10
 FILENAME_PATTERN = re.compile(r"^(?P<sample_id>.+)_(?P<method>[A-Za-z0-9-]+)\.csv$")
+
+# QC profiles let the `negative_intensity` rule adapt to the data stage.
+# `raw_spectrum` (default) keeps the historical behavior: any negative intensity
+# is a critical data-integrity defect. `processed_spectrum` and
+# `baseline_corrected` downgrade negatives to a single per-spectrum warning,
+# because baseline subtraction / processing routinely drives noise regions below
+# zero — this is expected baseline noise, not a defect. The negatives are still
+# recorded (auditable); only severity and explanation change.
+QC_PROFILES = ("raw_spectrum", "processed_spectrum", "baseline_corrected")
+DEFAULT_QC_PROFILE = "raw_spectrum"
 
 
 def tool_scan_experiment_dir(ctx: ToolContext, args: dict[str, object]) -> ToolResult:
@@ -181,6 +192,14 @@ def tool_quality_check(ctx: ToolContext, args: dict[str, object]) -> ToolResult:
         if args.get("spectra_dir")
         else experiment_dir / "spectra"
     )
+    qc_profile = str(args.get("qc_profile") or DEFAULT_QC_PROFILE)
+    if qc_profile not in QC_PROFILES:
+        return ToolResult(
+            False,
+            f"unknown qc_profile: {qc_profile}; expected one of {', '.join(QC_PROFILES)}",
+            error_code="invalid_args",
+            metadata={"batch_id": batch_id, "qc_profile": qc_profile},
+        )
     findings: list[dict[str, str]] = []
 
     metadata_rows: list[dict[str, str]] = []
@@ -322,7 +341,7 @@ def tool_quality_check(ctx: ToolContext, args: dict[str, object]) -> ToolResult:
                     path.name,
                 )
             )
-        findings.extend(_check_spectrum_file(ctx, batch_id, sample_id, path))
+        findings.extend(_check_spectrum_file(ctx, batch_id, sample_id, path, qc_profile))
 
     for sample_id in sorted(metadata_id_set):
         if sample_id not in file_sample_ids:
@@ -340,12 +359,13 @@ def tool_quality_check(ctx: ToolContext, args: dict[str, object]) -> ToolResult:
 
     qc_path = resolve_output_path(ctx.root, batch_id, "qc_summary.csv")
     assert_raw_data_readonly(ctx.root, qc_path)
-    _write_qc_summary(qc_path, findings)
+    _write_qc_summary(qc_path, findings, qc_profile)
     abnormal_samples = sorted({item["sample_id"] for item in findings if item["sample_id"]})
     by_check = Counter(item["check"] for item in findings)
     by_severity = Counter(item["severity"] for item in findings)
     metadata = {
         "batch_id": batch_id,
+        "qc_profile": qc_profile,
         "qc_summary_path": relpath(ctx, qc_path),
         "finding_count": len(findings),
         "abnormal_sample_count": len(abnormal_samples),
@@ -355,6 +375,7 @@ def tool_quality_check(ctx: ToolContext, args: dict[str, object]) -> ToolResult:
     }
     text = [
         f"QC completed for {batch_id}",
+        f"QC profile: {qc_profile}",
         f"Findings: {len(findings)}",
         f"Abnormal samples: {len(abnormal_samples)}",
         f"QC summary: {metadata['qc_summary_path']}",
@@ -646,11 +667,30 @@ def tool_generate_report(ctx: ToolContext, args: dict[str, object]) -> ToolResul
     assert_raw_data_readonly(ctx.root, report_path)
     assert_raw_data_readonly(ctx.root, qc_path)
     report_path.parent.mkdir(parents=True, exist_ok=True)
+    qc_profile = (rows[0].get("qc_profile") if rows else "") or DEFAULT_QC_PROFILE
+    numeric_anomaly_text = _format_checks(
+        by_check,
+        [
+            "missing_spectrum_column",
+            "missing_intensity",
+            "non_numeric_intensity",
+            "negative_intensity",
+            "non_numeric_x",
+            "x_not_monotonic",
+            "too_few_points",
+            "extreme_intensity",
+        ],
+    )
+    if by_check.get("negative_intensity", 0) > 0:
+        note = _negative_intensity_note(qc_profile, lang)
+        if note:
+            numeric_anomaly_text += "\n" + note
     sections = [
         f"# LabFlow QC Report: {batch_id}",
         "",
         f"## {section_title('data_overview', lang)}",
         f"- Batch ID: {batch_id}",
+        f"- QC profile: {qc_profile}",
         f"- QC summary: {relpath(ctx, qc_path)}",
         f"- Total findings: {len(rows)}",
         f"- Abnormal samples: {len(abnormal_samples)}",
@@ -680,19 +720,7 @@ def tool_generate_report(ctx: ToolContext, args: dict[str, object]) -> ToolResul
         ),
         "",
         f"## {section_title('numeric_anomaly', lang)}",
-        _format_checks(
-            by_check,
-            [
-                "missing_spectrum_column",
-                "missing_intensity",
-                "non_numeric_intensity",
-                "negative_intensity",
-                "non_numeric_x",
-                "x_not_monotonic",
-                "too_few_points",
-                "extreme_intensity",
-            ],
-        ),
+        numeric_anomaly_text,
         "",
         f"## {section_title('preprocess_results', lang)}",
         f"- Preprocessed CSV files: {len(preprocessed)}",
@@ -726,6 +754,7 @@ def tool_generate_report(ctx: ToolContext, args: dict[str, object]) -> ToolResul
         metadata={
             "batch_id": batch_id,
             "report_path": relpath(ctx, report_path),
+            "qc_profile": qc_profile,
             "finding_count": len(rows),
             "preprocess_success_count": preprocess_success,
             "preprocess_failed_count": preprocess_failed,
@@ -841,8 +870,75 @@ def _finding(
     }
 
 
+def _negative_intensity_findings(
+    ctx: ToolContext,
+    batch_id: str,
+    sample_id: str,
+    path: Path,
+    qc_profile: str,
+    negative_rows: list[tuple[int, float]],
+) -> list[dict[str, str]]:
+    """Emit `negative_intensity` findings according to the QC profile.
+
+    `raw_spectrum` (default): one critical finding per negative row, identical to
+    the historical behavior — a negative intensity is a data-integrity defect for
+    raw instrument output.
+
+    `processed_spectrum` / `baseline_corrected`: a single per-spectrum warning.
+    Baseline subtraction and other processing routinely drive noise regions below
+    zero, so a flood of per-point criticals is not useful; the negatives are still
+    recorded (auditable count + min value) but downgraded to a reviewable warning.
+    """
+    if not negative_rows:
+        return []
+    if qc_profile == "raw_spectrum":
+        return [
+            _finding(
+                ctx,
+                batch_id,
+                sample_id,
+                path,
+                "negative_intensity",
+                "critical",
+                f"row {idx} has negative intensity",
+                str(value),
+            )
+            for idx, value in negative_rows
+        ]
+    count = len(negative_rows)
+    min_value = min(value for _, value in negative_rows)
+    if qc_profile == "baseline_corrected":
+        message = (
+            f"{count} negative intensity values detected. For baseline-corrected"
+            " spectra, negative values may be expected baseline noise; review only"
+            " if magnitude or distribution is unexpected."
+        )
+    else:  # processed_spectrum
+        message = (
+            f"{count} negative intensity values detected. For processed spectra,"
+            " negative values may be expected (e.g. from baseline subtraction);"
+            " review only if magnitude or distribution is unexpected."
+        )
+    return [
+        _finding(
+            ctx,
+            batch_id,
+            sample_id,
+            path,
+            "negative_intensity",
+            "warning",
+            message,
+            f"count={count};min={min_value:.6g}",
+        )
+    ]
+
+
 def _check_spectrum_file(
-    ctx: ToolContext, batch_id: str, sample_id: str, path: Path
+    ctx: ToolContext,
+    batch_id: str,
+    sample_id: str,
+    path: Path,
+    qc_profile: str = DEFAULT_QC_PROFILE,
 ) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
     try:
@@ -892,6 +988,7 @@ def _check_spectrum_file(
 
     xs: list[float] = []
     intensities: list[float] = []
+    negative_rows: list[tuple[int, float]] = []
     for idx, row in enumerate(rows, start=2):
         x = _to_float(row.get("x"))
         intensity = _to_float(row.get("intensity"))
@@ -939,18 +1036,10 @@ def _check_spectrum_file(
         else:
             intensities.append(intensity)
             if intensity < 0:
-                findings.append(
-                    _finding(
-                        ctx,
-                        batch_id,
-                        sample_id,
-                        path,
-                        "negative_intensity",
-                        "critical",
-                        f"row {idx} has negative intensity",
-                        str(intensity),
-                    )
-                )
+                negative_rows.append((idx, intensity))
+    findings.extend(
+        _negative_intensity_findings(ctx, batch_id, sample_id, path, qc_profile, negative_rows)
+    )
     if len(xs) >= 2 and any(
         current <= previous for previous, current in zip(xs, xs[1:], strict=False)
     ):
@@ -999,7 +1088,7 @@ def _check_spectrum_file(
     return findings
 
 
-def _write_qc_summary(path: Path, findings: list[dict[str, str]]) -> None:
+def _write_qc_summary(path: Path, findings: list[dict[str, str]], qc_profile: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=QC_COLUMNS)
@@ -1007,6 +1096,7 @@ def _write_qc_summary(path: Path, findings: list[dict[str, str]]) -> None:
         for index, item in enumerate(findings, start=1):
             row = dict(item)
             row["finding_id"] = f"F{index:04d}"
+            row["qc_profile"] = qc_profile
             writer.writerow({key: row.get(key, "") for key in QC_COLUMNS})
 
 
@@ -1015,10 +1105,42 @@ def _format_checks(counts: Counter[str], keys: list[str]) -> str:
     return "\n".join(lines) if lines else "- No findings in this section."
 
 
+def _negative_intensity_note(profile: str, lang: str) -> str:
+    """Profile-aware advisory line for the report when negatives are recorded
+    under a non-raw profile. Returns "" for `raw_spectrum` (no note needed:
+    negatives are critical data-integrity defects there)."""
+    if profile == "raw_spectrum":
+        return ""
+    if lang == "en":
+        if profile == "baseline_corrected":
+            return (
+                "- Note: negative intensities are recorded as warnings, not critical."
+                " For baseline-corrected spectra, negative values may be expected"
+                " baseline noise; review only if magnitude or distribution is unexpected."
+            )
+        return (
+            "- Note: negative intensities are recorded as warnings, not critical."
+            " For processed spectra, negative values may be expected (e.g. from"
+            " baseline subtraction); review only if magnitude or distribution is"
+            " unexpected."
+        )
+    if profile == "baseline_corrected":
+        return (
+            "- 提示：负 intensity 以 warning（非 critical）记录。对于经过基线校正的光谱，"
+            "负值可能属于预期的基线噪声；仅当幅度或分布异常时需要进一步复核。"
+        )
+    return (
+        "- 提示：负 intensity 以 warning（非 critical）记录。对于经过处理的光谱，"
+        "负值可能属于预期现象（如基线扣除导致）；仅当幅度或分布异常时需要进一步复核。"
+    )
+
+
 __all__ = [
     "REQUIRED_METADATA_FIELDS",
     "REQUIRED_SPECTRA_FIELDS",
     "QC_COLUMNS",
+    "QC_PROFILES",
+    "DEFAULT_QC_PROFILE",
     "MIN_SPECTRA_POINTS",
     "FILENAME_PATTERN",
     "tool_scan_experiment_dir",

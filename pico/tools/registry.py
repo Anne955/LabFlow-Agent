@@ -29,6 +29,7 @@ QUALITY_CHECK_SCHEMA = {
         "metadata_path": {"type": "string"},
         "spectra_dir": {"type": "string"},
         "instrument_log_path": {"type": "string"},
+        "qc_profile": {"type": "string"},
     },
     "required": ["experiment_dir"],
 }
@@ -101,7 +102,11 @@ def build_labflow_tool_registry(context: ToolContext) -> dict[str, ToolSpec]:
         "quality_check": ToolSpec(
             "quality_check",
             "Run rule-based QC over metadata and spectra files, then write"
-            " outputs/<batch_id>/qc_summary.csv.",
+            " outputs/<batch_id>/qc_summary.csv. Optional qc_profile"
+            " (raw_spectrum|processed_spectrum|baseline_corrected, default"
+            " raw_spectrum) adjusts negative_intensity severity by data stage"
+            " (raw=critical per point; processed/baseline_corrected=collapsed"
+            " warning, since baseline subtraction can drive noise below zero).",
             QUALITY_CHECK_SCHEMA,
             False,
             labflow.tool_quality_check,
