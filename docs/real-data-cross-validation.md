@@ -43,21 +43,52 @@ This is exactly the kind of issue that **synthetic data cannot surface**: the
 synthetic generator only emits physically-clean values, so the rule looked correct
 under unit tests, but it over-reports on real processed spectra.
 
-## Recommended follow-ups (not done in this round)
+## Recommended follow-ups
 
-1. **Configurable negative-intensity policy.** Treat `negative_intensity` as
-   `warning` (not `critical`) for batches whose `instrument_log` or metadata
-   indicates baseline-corrected / processed data. Possibly gate on a
-   `data_kind` field ("raw" vs "processed").
-2. **Intensity-range sniffing.** When >N% of points are negative, downgrade the
-   per-point negative findings to a single batch-level "baseline-corrected data"
-   advisory rather than N critical findings.
+1. **Configurable negative-intensity policy.** ✅ Done (2026-07-06) — see
+   [Resolution](#resolution-2026-07-06-configurable-qc-profiles) below. `quality_check`
+   gained an optional `qc_profile` argument (`raw_spectrum` | `processed_spectrum` |
+   `baseline_corrected`, default `raw_spectrum`).
+2. **Intensity-range sniffing / collapse.** ✅ Done — under `processed_spectrum` /
+   `baseline_corrected`, a spectrum's negative points collapse into a single per-spectrum
+   `warning` (auditable count + min value), rather than N critical findings. (Implemented as
+   per-spectrum collapse rather than a batch-level advisory; the rule engine was kept minimal.)
 3. Import the remaining two MOFs (HKUST-1 already imported; fetch MeMOF-74,
    ZIF-8) once GitHub raw rate limits clear, to widen the cross-validation.
 
 These are QC-rule tuning items, not framework bugs — the framework correctly
 ran the real data through the full pipeline; the rule itself needs a
 research-data calibration that synthetic fixtures could not reveal.
+
+## Resolution (2026-07-06): configurable QC profiles
+
+The calibration gap surfaced above is now addressed with a minimal, opt-in QC-profile
+mechanism (no agent-loop change, no new dependencies, default behavior preserved).
+
+- `quality_check` accepts `qc_profile` ∈ {`raw_spectrum` (default), `processed_spectrum`,
+  `baseline_corrected`}.
+- `raw_spectrum` keeps the historical behavior: every `intensity < 0` is a per-point
+  `critical` finding. This stays the default, so the synthetic `batch_demo_*` benchmark
+  remains P=R=F1=1.0.
+- `processed_spectrum` / `baseline_corrected` collapse a spectrum's negative points into a
+  single per-spectrum `warning` with a profile-aware message (baseline subtraction can drive
+  noise below zero). The negatives are still recorded — `evidence` carries `count` and `min`
+  — so the record stays auditable; only severity and explanation change.
+- `qc_summary.csv` gains a `qc_profile` column; the QC report shows `QC profile: <name>` and
+  adds a profile-aware advisory note when negatives are recorded under a non-raw profile.
+
+### Effect on the Mg-MOF74 batch
+
+| `qc_profile` | Mg-MOF74 `negative_intensity` findings |
+|---|---|
+| `raw_spectrum` (default) | 989 × `critical` (unchanged) |
+| `baseline_corrected` | 1 × `warning` (collapsed, profile-aware message, `count=989` in evidence) |
+| `processed_spectrum` | 1 × `warning` (collapsed, profile-aware message) |
+
+HKUST-1 (0 negatives) produces no `negative_intensity` finding under any profile. The
+`extreme_intensity` warning behavior is unchanged. Running the Mg-MOF74 batch under
+`baseline_corrected` therefore removes the 989-critical explosion while keeping an auditable,
+reviewable record — exactly the calibration this cross-validation recommended.
 
 ## What this validates
 
