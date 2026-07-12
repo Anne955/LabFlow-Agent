@@ -18,3 +18,4 @@ class ToolContext:
     max_depth: int = 1
     spawn_delegate: Callable[[str, int], ToolResult] | None = None
     default_report_lang: str = "zh"
+    default_qc_profile: str = "raw_spectrum"

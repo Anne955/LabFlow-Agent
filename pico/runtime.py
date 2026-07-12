@@ -56,6 +56,7 @@ class Pico:
     use_planner: bool = True
     tool_summaries: list[dict[str, Any]] = field(default_factory=list)
     report_lang: str = "zh"
+    qc_profile: str = "raw_spectrum"
 
     @classmethod
     def from_session(
@@ -276,6 +277,7 @@ class Pico:
             max_depth=self.max_depth,
             spawn_delegate=self.spawn_delegate,
             default_report_lang=self.report_lang,
+            default_qc_profile=self.qc_profile,
         )
 
     def run_tool(self, name: str, args: dict[str, Any]) -> ToolResult:
@@ -318,6 +320,7 @@ class Pico:
             max_depth=self.max_depth,
             secret_env_names=self.secret_env_names,
             report_lang=self.report_lang,
+            qc_profile=self.qc_profile,
         )
         answer = child.ask(task)
         return ToolResult(True, answer, metadata={"delegate_depth": child.depth})

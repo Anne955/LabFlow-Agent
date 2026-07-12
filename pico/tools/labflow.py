@@ -192,7 +192,9 @@ def tool_quality_check(ctx: ToolContext, args: dict[str, object]) -> ToolResult:
         if args.get("spectra_dir")
         else experiment_dir / "spectra"
     )
-    qc_profile = str(args.get("qc_profile") or DEFAULT_QC_PROFILE)
+    qc_profile = str(
+        args.get("qc_profile") or getattr(ctx, "default_qc_profile", DEFAULT_QC_PROFILE)
+    )
     if qc_profile not in QC_PROFILES:
         return ToolResult(
             False,
