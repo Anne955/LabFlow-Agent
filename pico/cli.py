@@ -29,6 +29,7 @@ from .providers import (
 )
 from .run_store import RunStore, SessionStore
 from .runtime import Pico
+from .tools.labflow import DEFAULT_QC_PROFILE, QC_PROFILES
 from .workspace import WorkspaceContext
 
 
@@ -71,6 +72,15 @@ def build_arg_parser() -> argparse.ArgumentParser:
         choices=["zh", "en"],
         default="zh",
         help="Report language (default zh)",
+    )
+    parser.add_argument(
+        "--qc-profile",
+        choices=list(QC_PROFILES),
+        default=DEFAULT_QC_PROFILE,
+        help="QC profile for negative_intensity severity by data stage"
+        " (raw_spectrum (default) | processed_spectrum | baseline_corrected)."
+        " Sets the default used when the quality_check tool call omits qc_profile;"
+        " an explicit tool qc_profile still wins.",
     )
     return parser
 
@@ -146,6 +156,7 @@ def build_agent(args: argparse.Namespace) -> Pico:
                 secret_env_names=secret_names,
                 use_planner=not args.no_planner,
                 report_lang=args.lang,
+                qc_profile=args.qc_profile,
             )
     return Pico(
         workspace=workspace,
@@ -160,6 +171,7 @@ def build_agent(args: argparse.Namespace) -> Pico:
         secret_env_names=secret_names,
         use_planner=not args.no_planner,
         report_lang=args.lang,
+        qc_profile=args.qc_profile,
     )
 
 

@@ -3,6 +3,20 @@
 ## [Unreleased]
 
 ### Added
+- **CLI `--qc-profile` flag** (`pico/cli.py`, `pico/runtime.py`, `pico/tool_context.py`,
+  `pico/tools/labflow.py`): surfaces the QC profile at the CLI, threading
+  `--qc-profile` -> `Pico.qc_profile` -> `ToolContext.default_qc_profile` -> `quality_check`
+  default (mirroring the existing `--lang` -> `report_lang` path).
+  - `--qc-profile raw_spectrum (default) | processed_spectrum | baseline_corrected` sets
+    the default used when a `quality_check` tool call omits `qc_profile`; an explicit tool
+    `qc_profile` still wins. `argparse` `choices` reject unknown values at parse time.
+  - Default `raw_spectrum` everywhere; backward compatible (synthetic benchmark stays
+    P=R=F1=1.0). `Pico.from_session`, `spawn_delegate`, and `tool_context()` all thread it.
+  - No env var, no metadata auto-inference (out of scope this round).
+
+## [v0.3.0] - 2026-07-06
+
+### Added
 - **Configurable QC profiles** (`pico/tools/labflow.py`, `pico/tools/registry.py`): the
   `quality_check` tool now accepts an optional `qc_profile` argument
   (`raw_spectrum` (default) | `processed_spectrum` | `baseline_corrected`) that makes the

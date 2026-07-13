@@ -178,6 +178,12 @@ This public batch is **not** mixed into the synthetic benchmark Precision / Reca
 quality_check(experiment_dir=..., qc_profile="baseline_corrected")
 ```
 
+或通过 CLI 设置默认 profile（当工具调用省略 `qc_profile` 时生效；显式工具参数仍优先）：
+
+```bash
+python -m pico --provider fake --qc-profile baseline_corrected "QC the batch"
+```
+
 该改进基于真实公开 MOF 拉曼数据交叉验证发现：Mg-MOF74 经过基线校正后有 989 个负 intensity，对原始数据合理的 `negative_intensity` 规则对处理后数据过严。详见 [`docs/real-data-cross-validation.md`](docs/real-data-cross-validation.md)。
 
 ## Workflow Trace
@@ -222,6 +228,10 @@ python evaluate_qc.py \
 - `--no-planner` — disable the suggested-plan guidance layer (pure LLM-driven mode).
 - `--stream` — stream the final answer to the terminal token-by-token.
 - `--lang zh|en` — report language (default zh).
+- `--qc-profile raw_spectrum|processed_spectrum|baseline_corrected` — QC profile for
+  `negative_intensity` severity by data stage (default `raw_spectrum`). Sets the default
+  used when the `quality_check` tool call omits `qc_profile`; an explicit tool `qc_profile`
+  still wins. Threads CLI → `Pico.qc_profile` → `ToolContext.default_qc_profile`.
 
 The `generate_report` tool's `lang` argument still wins when the LLM passes it; `--lang`
 sets the default used when the tool call omits `lang`.
