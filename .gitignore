@@ -9,3 +9,6 @@ venv/
 .DS_Store
 .superpowers/
 .claude/
+
+# Personal study notes / interview scratch - not part of the project
+summary/
