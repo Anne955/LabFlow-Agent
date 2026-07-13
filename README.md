@@ -1,289 +1,322 @@
 # LabFlow Agent
 
-LabFlow Agent 是一个面向实验数据处理的本地科研流程智能体。它基于本地 Agent Harness 的工具调用机制，把实验目录扫描、metadata 校验、数据质控、白名单预处理、结果汇总、Markdown 报告生成和 workflow trace 串成一条可复核的本地流程。
+**Local-first, zero-dependency agent that turns messy experimental batches into auditable QC reports.**
 
-## Project Motivation
+LabFlow Agent drives an LLM through a fixed set of safe tools to scan experiment
+directories, run rule-based quality checks, call whitelisted preprocessing scripts,
+summarize results, generate Markdown reports, and export JSON workflow logs - all inside a
+sandboxed workspace where raw data is strictly read-only.
 
-实验室或企业研发部门完成一批 Raman、FTIR、XRF、UV-Vis 等实验后，通常会得到 metadata 表、光谱 CSV、仪器日志和中间结果。人工整理时容易出现样本编号不一致、字段缺失、重复样本、文件缺失、命名不规范、数值异常和报告整理耗时等问题。LabFlow Agent 用于自动执行这些重复性检查，并保留可追溯证据链。
+```mermaid
+flowchart TD
+    CLI["CLI / REPL"] --> Runtime["Runtime loop"]
+    Runtime --> Provider["LLM Provider<br/>Fake / Ollama / OpenAI / Anthropic"]
+    Provider -->|tool or final| Runtime
+    Runtime --> Tools["7 LabFlow Tools<br/>scan · QC · preprocess · report · log"]
+    Tools --> Sandbox["Workspace Sandbox<br/>raw data read-only"]
+    Tools --> Trace["Trace + Workflow Log"]
+```
 
-## What LabFlow Agent Is
+---
 
-- 本地科研数据流程助手。
-- 面向实验批次目录的扫描、质控、预处理和报告生成工具。
-- 通过工具注册层和 runtime trace 保证流程可复核。
-- 派生结果统一写入 `outputs/`、`reports/`、`traces/`。
+## Why this project
 
-## What LabFlow Agent Is Not
+After a lab finishes a batch of Raman / FTIR / XRF / UV-Vis experiments, the raw output is
+a pile of metadata tables, spectrum CSVs, instrument logs, and intermediate files. Manual
+cleanup is repetitive and error-prone: mismatched sample IDs, missing fields, duplicate
+samples, missing files, non-standard names, numeric anomalies, and slow report assembly.
 
-- 不是 coding agent，不展示自动修代码能力。
-- 不开放任意 shell。
-- 不训练大模型。
-- 不替代科研人员给出最终科学结论。
-- 不做颜料数据库 CRUD。
-- 不做 PostgreSQL 物质溯源系统。
+LabFlow Agent automates these repetitive checks **and** preserves a traceable evidence chain
+- so a reviewer can see exactly which rule fired, on which sample, with what evidence, and
+reproduce the run.
+
+### Why not LangChain?
+
+LabFlow is not an orchestration framework; it is a **vertical workflow**. LangChain gives
+you flexible chains and agents; LabFlow gives you a *fixed, auditable* pipeline of safe
+tools purpose-built for experimental-batch QC:
+
+- **One action per turn**, deterministic XML protocol - replayable and inspectable, not a
+  free-form ReAct soup.
+- **Sandboxed**: the model can never touch raw data or run arbitrary shell; every effect is
+  a guarded tool call.
+- **Zero runtime dependencies** - installable in air-gapped lab environments with just the
+  standard library.
+- **Rule-based, not hallucinated** - findings are deterministic QC evidence, not LLM
+  opinions about your data.
+
+### Why an XML tool protocol instead of function calling?
+
+A plain `<tool>{"name":...,"args":...}</tool>` / `<final>...</final>` protocol needs only
+text generation. That means the **same loop runs on the offline `FakeModelClient` and on
+real providers** (Ollama / OpenAI-compatible / Anthropic-compatible), so the entire pipeline
+is unit-testable and deterministic without spending tokens.
+
+### Why is this good for scientific data?
+
+Every finding is a row in `qc_summary.csv` with sample, file, check, severity, and evidence;
+every run becomes a `traces/<batch>_workflow_log.json` with per-tool timing and inputs. The
+evaluator computes Precision / Recall / F1 against ground-truth labels and counts
+**raw-data miswrites (must be 0)**. For scientific work, *auditability* matters as much as
+*accuracy*.
+
+---
+
+## Core features
+
+- **Local-first** - runs entirely on your machine; no data leaves the workspace unless you
+  point a provider at an external API.
+- **Zero runtime dependencies** - `pyproject.toml` declares `dependencies = []`; only the
+  Python standard library is needed at runtime.
+- **XML Tool Protocol** - provider-agnostic, deterministic, fully testable with the offline
+  fake provider.
+- **Scientific QC Workflow** - 10 rule-based checks across metadata, file consistency, and
+  spectra (numeric anomalies, monotonicity, point count, robust MAD outlier detection).
+- **Workspace Sandbox** - raw data under `data/raw` and `data/batch_*` is read-only and
+  enforced; derived artifacts are confined to `outputs/`, `reports/`, `traces/`.
+- **Configurable QC Profiles** - `negative_intensity` severity adapts to the data stage
+  (raw / processed / baseline-corrected), surfaced via tool arg and `--qc-profile` CLI.
+- **Deterministic Reports** - templated, localized (zh/en) Markdown reports; same inputs
+  produce the same outputs.
+- **Tracing & Workflow Logs** - every tool turn is a trace event; a batch-scoped JSON
+  workflow log records inputs, outputs, status, and timing.
+- **Robustness** - typed provider errors, exponential-backoff retry, session/run-store
+  recovery, optional planner, pluggable context truncation.
+- **CI** - lint + 3.10/3.11/3.12 test matrix + safety gate on every push.
+
+---
 
 ## Architecture
 
-```text
-pico/
-  cli.py               # CLI 与 REPL 装配
-  runtime.py           # <tool>/<final> 主循环、trace 记录、workflow log 导出
-  workflow_trace.py    # trace.jsonl -> LabFlow workflow log
-  prompt_prefix.py     # LabFlow 身份与工具协议
-  tool_registry.py     # LabFlow 工具注册层
-  labflow_tools.py     # scan / inspect / QC / preprocess / report / log 工具
-  safety/guard.py      # batch_id、输出目录、脚本白名单等安全边界
-  providers/clients.py # Fake、Ollama、OpenAI-compatible、Anthropic-compatible
+```mermaid
+flowchart TD
+    CLI["CLI / REPL<br/>pico/cli.py"] --> Runtime["Runtime<br/>Pico.ask loop"]
+    Runtime --> Planner["Planner<br/>suggested_plan (optional)"]
+    Runtime --> Provider["Provider<br/>Fake / Ollama / OpenAI / Anthropic"]
+    Provider -->|tool or final| Runtime
+    Runtime --> Exec["Tool Executor<br/>schema validation + approval"]
+    Exec --> Tools["LabFlow Tools<br/>7 registered tools"]
+    Tools --> Safety["Safety Guard<br/>raw-data read-only"]
+    Safety --> WS["Workspace<br/>data/ · outputs/ · reports/ · traces/"]
+    Tools --> Trace["Trace + Workflow Log"]
 ```
 
-## Tool Registry
+The LLM never touches the filesystem directly - every effect goes through a registered tool
+whose write path is guarded by `assert_raw_data_readonly`. Generic `run_shell` /
+`write_file` / `patch_file` exist only for the safety test-suite and are **not** exposed in
+the LabFlow registry.
 
-默认 LabFlow registry 暴露 7 个工具：
+See [docs/architecture.md](docs/architecture.md) for the full module breakdown.
 
-1. `scan_experiment_dir`
-2. `inspect_table`
-3. `quality_check`
-4. `run_preprocess_script`
-5. `summarize_outputs`
-6. `generate_report`
-7. `export_workflow_log`
+## Agent loop
 
-默认不暴露：
+```mermaid
+flowchart TD
+    Start([User message]) --> Prefix["Build prompt<br/>prefix + memory + history"]
+    Prefix --> Planner["Optional suggested plan"]
+    Planner --> Call["Call provider"]
+    Call --> Parse{"Parse response"}
+    Parse -->|tool JSON| Tool["Execute one tool"]
+    Tool --> Obs["Append observation to history"]
+    Obs --> Prefix
+    Parse -->|final| Final(["Final answer<br/>+ workflow log"])
+    Parse -->|invalid| Retry["Correction note<br/>retry up to max_attempts"]
+    Retry --> Prefix
+```
 
-- `run_shell`
-- `write_file`
-- `patch_file`
+One action per turn, fully replayable. See [docs/agent-loop.md](docs/agent-loop.md).
 
-## Safety Boundaries
+## QC workflow
 
-- `data/raw` 和 `data/batch_*` 作为原始数据输入，不允许被预处理脚本覆盖写入。
-- 派生结果只能进入：
-  - `outputs/<batch_id>/`
-  - `reports/<batch_id>_qc_report.md`
-  - `traces/<batch_id>_workflow_log.json`
-- 预处理脚本必须在白名单中，目前支持 `normalize_csv.py`。
-- `batch_id` 只允许安全字符，防止路径逃逸。
+```mermaid
+flowchart LR
+    Scan["scan_experiment_dir"] --> Inspect["inspect_table"]
+    Inspect --> QC["quality_check"]
+    QC --> Preproc["run_preprocess_script"]
+    Preproc --> Sum["summarize_outputs"]
+    Sum --> Report["generate_report"]
+    Report --> Log["export_workflow_log"]
+```
 
-## Demo Dataset
+Seven tools, each leaving an auditable artifact (`qc_summary.csv`, `preprocessed/`,
+`*_qc_report.md`, `*_workflow_log.json`). See [docs/workflow.md](docs/workflow.md).
 
-可生成 5 个可复现 demo batch：
+---
+
+## Quick start
+
+### Install
 
 ```bash
-python scripts/generate_demo_batches.py --batches 5 --samples-per-batch 20 --seed 42
+git clone <repo>
+cd labflow-agent
+pip install -e ".[dev]"     # dev adds pytest + ruff; runtime has 0 dependencies
 ```
 
-生成：
+Requires Python >= 3.10. Runtime needs only the standard library.
 
-```text
-data/batch_demo_001/ ... data/batch_demo_005/
-labels/batch_demo_001_labels.json ... labels/batch_demo_005_labels.json
-```
+### Run a demo batch (deterministic, no model needed)
 
-每个 batch 包含 `metadata.csv`、`instrument_log.txt` 和 `spectra/`。
-
-## Public Data Validation: RRUFF Raman Fixture
-
-LabFlow also includes a separate public-data compatibility validation path based on a small offline RRUFF-style Raman fixture set.
-
-Raw local fixture files live under:
-
-```text
-data_public/rruff_raw/
-```
-
-These text files mimic public RRUFF Raman exports with header/comment lines plus numeric Raman shift and intensity pairs. They are included so the converter and LabFlow workflow can be verified without relying on external APIs or network access. Users may replace or extend them with locally downloaded public RRUFF Raman `.txt` files.
-
-### Real public Raman data (IBM uRaman-Dataset)
-
-For cross-validation against non-synthetic data, `data/batch_public_mof_001/` contains
-two real Metal-Organic-Framework Raman spectra (HKUST-1, Mg-MOF74) from the
-[IBM/uRaman-Dataset](https://github.com/IBM/uRaman-Dataset) (CDLA-Sharing-1.0 license).
-This batch runs through the full LabFlow QC workflow like any synthetic batch and
-surfaced a real calibration gap: baseline-corrected research data contains negative
-intensities that the `negative_intensity` rule (correct for raw data) flags as critical.
-See [`docs/real-data-cross-validation.md`](docs/real-data-cross-validation.md) for the full report.
-
-Convert the raw fixture into a LabFlow batch:
-
-```bash
-python scripts/convert_rruff_to_labflow_csv.py \
-  --input-dir data_public/rruff_raw \
-  --output-dir data/batch_public_rruff_001 \
-  --batch-id batch_public_rruff_001 \
-  --limit 20
-```
-
-The converter writes:
-
-```text
-data/batch_public_rruff_001/
-├── metadata.csv
-├── instrument_log.txt
-└── spectra/
-    ├── rruff_001_raman.csv
-    └── ...
-```
-
-`metadata.csv` includes `sample_id`, `method`, `instrument`, `operator`, `file_path`, `source_dataset`, and `source_id`. Converted spectra use the LabFlow standard `x,intensity` CSV format.
-
-Run the public RRUFF compatibility workflow:
-
-```bash
-python -m pico --approval auto --provider fake --max-steps 7 --fake-script '<tool>{"name":"scan_experiment_dir","args":{"experiment_dir":"data/batch_public_rruff_001","batch_id":"batch_public_rruff_001"}}</tool>||<tool>{"name":"inspect_table","args":{"path":"data/batch_public_rruff_001/metadata.csv","max_rows":5}}</tool>||<tool>{"name":"quality_check","args":{"experiment_dir":"data/batch_public_rruff_001","batch_id":"batch_public_rruff_001"}}</tool>||<tool>{"name":"run_preprocess_script","args":{"script_name":"normalize_csv.py","batch_id":"batch_public_rruff_001","mode":"batch","input_dir":"data/batch_public_rruff_001/spectra","input_glob":"*.csv","output_suffix":"_normalized.csv","skip_critical":true}}</tool>||<tool>{"name":"summarize_outputs","args":{"batch_id":"batch_public_rruff_001"}}</tool>||<tool>{"name":"generate_report","args":{"batch_id":"batch_public_rruff_001"}}</tool>||<tool>{"name":"export_workflow_log","args":{"batch_id":"batch_public_rruff_001"}}</tool>||<final>LabFlow public RRUFF compatibility workflow completed for batch_public_rruff_001.</final>' "Run full LabFlow workflow for data/batch_public_rruff_001"
-```
-
-Expected public-validation outputs:
-
-```text
-outputs/batch_public_rruff_001/qc_summary.csv
-outputs/batch_public_rruff_001/preprocess_summary.csv
-outputs/batch_public_rruff_001/preprocessed/
-reports/batch_public_rruff_001_qc_report.md
-traces/batch_public_rruff_001_workflow_log.json
-```
-
-This public batch is **not** mixed into the synthetic benchmark Precision / Recall / F1 numbers by default. It validates real-style text-file ingestion, conversion, workflow traceability, and report generation only. It does not claim Raman mineral identification accuracy, peak assignment correctness, calibration correctness, or scientific interpretation quality.
-
-## Quality Check Rules
-
-当前 CSV 质控规则包括：
-
-- metadata 缺失值；
-- 重复 `sample_id`；
-- metadata 中有样本但缺少光谱文件；
-- 光谱文件无 metadata 记录；
-- 文件命名不符合 `sample_id_method.csv`；
-- 光谱 CSV 缺少 `x` 或 `intensity`；
-- `intensity` 缺失、非数值、负值、极端值；
-- `x` 非单调递增；
-- 光谱点数过少。
-
-### QC Profiles (data-stage-aware negative intensity)
-
-`negative_intensity` 的严重度取决于数据阶段，通过 `quality_check` 的可选 `qc_profile` 参数控制：
-
-| Profile | `negative_intensity` 语义 | 适用场景 |
-|---|---|---|
-| `raw_spectrum`（默认） | 每个负值为 `critical`（原始仪器输出不应出现负值） | 原始数据，向后兼容 |
-| `processed_spectrum` | 同一谱图负值合并为单条 `warning`，说明可能来自处理（如基线扣除） | 经过处理的光谱 |
-| `baseline_corrected` | 同一谱图负值合并为单条 `warning`，说明基线校正后负值可能是预期基线噪声 | 基线校正后的光谱 |
-
-- 默认 `raw_spectrum` 保证对合成 benchmark 与历史行为完全向后兼容。
-- 非默认 profile 下，负值仍会被记录（可审计：含计数与最小值 evidence），只是不再以 `critical` 形式大量报错。
-- `qc_summary.csv` 新增 `qc_profile` 列，每条 finding 标注其使用的 profile；QC 报告的 `data_overview` 段会显示 `QC profile: <name>`，并在 `numeric_anomaly` 段附上 profile-aware 复核提示。
-
-通过工具参数使用：
-
-```text
-quality_check(experiment_dir=..., qc_profile="baseline_corrected")
-```
-
-或通过 CLI 设置默认 profile（当工具调用省略 `qc_profile` 时生效；显式工具参数仍优先）：
-
-```bash
-python -m pico --provider fake --qc-profile baseline_corrected "QC the batch"
-```
-
-该改进基于真实公开 MOF 拉曼数据交叉验证发现：Mg-MOF74 经过基线校正后有 989 个负 intensity，对原始数据合理的 `negative_intensity` 规则对处理后数据过严。详见 [`docs/real-data-cross-validation.md`](docs/real-data-cross-validation.md)。
-
-## Workflow Trace
-
-一次完整 workflow 会记录 7 个核心事件：
-
-```text
-scan_experiment_dir -> inspect_table -> quality_check -> run_preprocess_script -> summarize_outputs -> generate_report -> export_workflow_log
-```
-
-Public workflow log 位于：
-
-```text
-traces/<batch_id>_workflow_log.json
-```
-
-每个事件包含 tool、input、output_paths、metadata、status、error_code、timestamp 和 duration_seconds。顶层包含 total_duration_seconds。
-
-## How to Run Demo
-
-单 batch 完整 fake-provider workflow：
+The fake provider replays a scripted workflow, so this runs offline and produces identical
+outputs every time:
 
 ```bash
 python -m pico --approval auto --provider fake --max-steps 7 --fake-script '<tool>{"name":"scan_experiment_dir","args":{"experiment_dir":"data/batch_demo_001","batch_id":"batch_demo_001"}}</tool>||<tool>{"name":"inspect_table","args":{"path":"data/batch_demo_001/metadata.csv","max_rows":5}}</tool>||<tool>{"name":"quality_check","args":{"experiment_dir":"data/batch_demo_001","batch_id":"batch_demo_001"}}</tool>||<tool>{"name":"run_preprocess_script","args":{"script_name":"normalize_csv.py","batch_id":"batch_demo_001","mode":"batch","input_dir":"data/batch_demo_001/spectra","input_glob":"*.csv","output_suffix":"_normalized.csv","skip_critical":true}}</tool>||<tool>{"name":"summarize_outputs","args":{"batch_id":"batch_demo_001"}}</tool>||<tool>{"name":"generate_report","args":{"batch_id":"batch_demo_001"}}</tool>||<tool>{"name":"export_workflow_log","args":{"batch_id":"batch_demo_001"}}</tool>||<final>LabFlow full workflow completed for batch_demo_001.</final>' "Run full LabFlow workflow for data/batch_demo_001"
 ```
 
-多 batch 评测：
+Expected outputs:
 
-```bash
-python evaluate_qc.py \
-  --pred-dir outputs \
-  --labels-dir labels \
-  --reports-dir reports \
-  --traces-dir traces \
-  --output evaluation_summary.json \
-  --errors evaluation_errors.csv \
-  --resume-metrics resume_metrics.json
+```text
+outputs/batch_demo_001/qc_summary.csv
+outputs/batch_demo_001/preprocess_summary.csv
+outputs/batch_demo_001/preprocessed/
+reports/batch_demo_001_qc_report.md
+traces/batch_demo_001_workflow_log.json
 ```
 
-## New CLI options (2026-07 improvements)
+### Use a real model
 
-- `--no-planner` — disable the suggested-plan guidance layer (pure LLM-driven mode).
-- `--stream` — stream the final answer to the terminal token-by-token.
-- `--lang zh|en` — report language (default zh).
-- `--qc-profile raw_spectrum|processed_spectrum|baseline_corrected` — QC profile for
-  `negative_intensity` severity by data stage (default `raw_spectrum`). Sets the default
-  used when the `quality_check` tool call omits `qc_profile`; an explicit tool `qc_profile`
-  still wins. Threads CLI → `Pico.qc_profile` → `ToolContext.default_qc_profile`.
+```bash
+# OpenAI-compatible (incl. DeepSeek), Ollama, or Anthropic-compatible
+python -m pico --provider openai-compatible --model gpt-4.1 "QC data/batch_demo_001 and generate a report"
+```
 
-The `generate_report` tool's `lang` argument still wins when the LLM passes it; `--lang`
-sets the default used when the tool call omits `lang`.
+### CLI flags
 
-Environment variables:
-- `PICO_MAX_RETRIES`, `PICO_RETRY_BASE_DELAY_MS`, `PICO_RETRY_MAX_DELAY_MS` — provider retry tuning.
-- `PICO_TRUNCATION_STRATEGY` — `priority` (default) or `smart`.
-- `PICO_RUN_INTEGRATION=1` — enable integration tests.
+| Flag | Purpose |
+|---|---|
+| `--provider` | `fake` (default) / `ollama` / `openai-compatible` / `anthropic-compatible` |
+| `--approval` | `never` / `ask` (default) / `auto` |
+| `--max-steps` | tool steps per run (default 8) |
+| `--no-planner` | disable the suggested-plan guidance layer |
+| `--stream` | replay the final answer token-by-token |
+| `--lang zh\|en` | report language (default zh) |
+| `--qc-profile raw_spectrum\|processed_spectrum\|baseline_corrected` | QC profile default (default raw_spectrum) |
+| `--fake-script` | offline scripted responses (`||`-separated), for deterministic demos |
 
-## Evaluation Metrics
+### Generate the demo batches
 
-`evaluate_qc.py` 支持单 batch 和多 batch：
+```bash
+python scripts/generate_demo_batches.py --batches 5 --samples-per-batch 20 --seed 42
+```
 
-- Precision / Recall / F1；
-- expected / predicted / TP / FP / FN；
-- end-to-end completion；
-- report field coverage；
-- raw data miswrite count；
-- total / average processing seconds；
-- `evaluation_errors.csv` 中的 FP/FN 明细；
-- `resume_metrics.json` 中的简历指标。
+---
 
-## Current Results
+## Real-data validation
 
-请以实际运行生成的 `evaluation_summary.json` 和 `resume_metrics.json` 为准，不在 README 中硬编码未运行数字。当前验证命令会在本地生成这些文件。
+LabFlow is cross-validated against **real public MOF Raman spectra** from the
+[IBM/uRaman-Dataset](https://github.com/IBM/uRaman-Dataset) (CDLA-Sharing-1.0 license):
+HKUST-1 and Mg-MOF74, imported into `data/batch_public_mof_001/`.
 
-## Development Verification
+The cross-validation surfaced a real calibration gap that synthetic fixtures could not:
+Mg-MOF74 is **baseline-corrected**, so 35.8% of its points are negative - expected baseline
+noise, not a defect. Under the default `raw_spectrum` profile this produced 989
+`negative_intensity` critical findings; the configurable `baseline_corrected` profile
+collapses them into one auditable warning. This is the point of validating against real
+data. See [docs/real-data-validation.md](docs/real-data-validation.md) and the full
+[real-data cross-validation report](docs/real-data-cross-validation.md).
+
+---
+
+## Benchmark
+
+| Metric | Value |
+|---|---|
+| **Precision / Recall / F1** | **1.000 / 1.000 / 1.000** |
+| True positives / FP / FN | 55 / 0 / 0 |
+| Batches / Samples | 5 / 105 |
+| Report field coverage | 1.000 |
+| Raw-data miswrite count | **0** |
+| Tests passing | 140 passed, 4 skipped (gated integration) |
+| `ruff check .` / `ruff format --check .` | clean |
+| Runtime dependencies | 0 |
+
+All numbers are produced by running the evaluation in this repo - see
+[docs/benchmark.md](docs/benchmark.md) to reproduce. No RAG/retrieval metrics are reported
+because there is no retrieval subsystem; no real-model latency is committed because it is
+environment-dependent.
+
+---
+
+## Roadmap
+
+```mermaid
+flowchart LR
+    v1["v0.1<br/>Runtime Foundation"] --> v2["v0.2<br/>Engineering Hardening"]
+    v2 --> v3["v0.3<br/>Profile-aware QC"]
+    v3 --> v4["v0.4<br/>CLI & Polish"]
+```
+
+| Version | Date | Summary |
+|---|---|---|
+| v0.1 | (pre-tag) | Agent runtime, XML protocol, 7 tools, synthetic benchmark |
+| v0.2.1 | 2026-07-06 | Phases 1-4 hardening (typed errors, retry, planner, CI, streaming) + MAD fix |
+| v0.3.0 | 2026-07-07 | Configurable QC profiles + real MOF cross-validation |
+| v0.4.0 | 2026-07-13 | `--qc-profile` CLI threading + documentation refresh |
+
+Full version history: [docs/release-history.md](docs/release-history.md) and
+[CHANGELOG.md](CHANGELOG.md).
+
+---
+
+## Documentation
+
+| Doc | What it covers |
+|---|---|
+| [docs/architecture.md](docs/architecture.md) | Module layout, layers, safety, providers |
+| [docs/agent-loop.md](docs/agent-loop.md) | `Pico.ask()` control flow and limits |
+| [docs/workflow.md](docs/workflow.md) | The 7-step QC workflow and QC rules |
+| [docs/real-data-validation.md](docs/real-data-validation.md) | Real MOF Raman cross-validation |
+| [docs/benchmark.md](docs/benchmark.md) | All metrics and how to reproduce them |
+| [docs/release-history.md](docs/release-history.md) | Version timeline |
+
+---
+
+## Safety boundaries
+
+- `data/raw` and `data/batch_*` are **read-only** inputs; preprocessing scripts cannot
+  overwrite them (`assert_raw_data_readonly` raises `SafetyViolationError`).
+- Derived artifacts enter only `outputs/<batch_id>/`, `reports/<batch_id>_qc_report.md`,
+  and `traces/<batch_id>_workflow_log.json`.
+- Preprocessing scripts must be whitelisted (currently `normalize_csv.py`).
+- `batch_id` is sanitized to safe characters to prevent path traversal.
+- Generic `run_shell` / `write_file` / `patch_file` are **not** exposed in the LabFlow
+  registry.
+
+## Tool registry
+
+The default LabFlow registry exposes 7 tools: `scan_experiment_dir`,
+`inspect_table`, `quality_check`, `run_preprocess_script`, `summarize_outputs`,
+`generate_report`, `export_workflow_log`. To add a tool, see
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Development verification
 
 ```bash
 python -m compileall pico scripts evaluate_qc.py
-python -m unittest discover -s tests
-```
-
-如果安装了 dev dependencies，也可以运行：
-
-```bash
 python -m pytest
-python -m ruff check .
+ruff check .
+ruff format --check .
 ```
 
-如果当前环境没有 `pytest` 或 `ruff`，这属于依赖未安装，不代表代码失败。
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup and safety rules.
 
-## Known Limitations
+## Known limitations
 
-- demo 数据为合成光谱数据和人工注入异常。
-- 当前质控基于规则，不是科学结论判定。
-- 当前主要支持 CSV，不覆盖所有仪器私有格式。
-- 预处理脚本为 demo 级别。
-- workflow 使用 fake provider 可稳定演示，真实模型表现取决于模型输出是否遵守工具协议。
+- Demo and benchmark data are synthetic spectra with hand-injected anomalies.
+- QC is rule-based, not a scientific conclusion.
+- Primarily CSV-oriented; private instrument binary formats are out of scope.
+- The preprocessing script (`normalize_csv.py`) is demo-level.
+- The fake provider drives stable deterministic demos; real-model behavior depends on the
+  model honoring the tool protocol.
 
-## Resume Description
+## License
 
-**LabFlow Agent：面向实验数据处理的本地科研流程智能体**
+The LabFlow Agent code is provided as-is for this project. Real public Raman data in
+`data/batch_public_mof_001/` is from the IBM/uRaman-Dataset under
+CDLA-Sharing-1.0. Synthetic demo fixtures are generated by `scripts/generate_demo_batches.py`.
 
-基于本地 Agent Harness 二次开发科研数据流程助手，重构系统提示词与工具注册层，将代码仓库任务流改造为实验数据处理 workflow。系统默认不暴露 `run_shell`、`write_file`、`patch_file`，支持实验目录扫描、metadata 校验、CSV 光谱质控、白名单批量预处理、Markdown 报告生成和 JSON workflow trace。构建多批次合成 benchmark，基于 labels 计算 Precision、Recall、F1、报告字段覆盖率、耗时和误差诊断，并通过 `evaluation_summary.json` 与 `resume_metrics.json` 输出可复核指标。
+---
+
+**LabFlow Agent** - turning "a folder full of spectra" into "an auditable QC report" with
+zero runtime dependencies and a sandbox the model cannot escape.
