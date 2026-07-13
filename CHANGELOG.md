@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+_No changes yet._
+
+## [v0.4.0] - 2026-07-13
+
 ### Added
 - **CLI `--qc-profile` flag** (`pico/cli.py`, `pico/runtime.py`, `pico/tool_context.py`,
   `pico/tools/labflow.py`): surfaces the QC profile at the CLI, threading
@@ -13,6 +17,12 @@
   - Default `raw_spectrum` everywhere; backward compatible (synthetic benchmark stays
     P=R=F1=1.0). `Pico.from_session`, `spawn_delegate`, and `tool_context()` all thread it.
   - No env var, no metadata auto-inference (out of scope this round).
+- **Documentation refresh**: restructured README with Mermaid diagrams and a 30-second
+  pitch; added `docs/{architecture,agent-loop,workflow,real-data-validation,benchmark,
+  release-history}.md` and `docs/release-notes-v0.4.0.md`. Corrected stale CONTRIBUTING
+  lint-debt note (CI is now a hard gate).
+- **Release metadata**: `pyproject.toml` `version` bumped `0.2.1` -> `0.4.0` to match the
+  Git tag.
 
 ## [v0.3.0] - 2026-07-06
 
