@@ -14,15 +14,10 @@ ruff format --check .
 pytest tests/ -v -W ignore::DeprecationWarning
 ```
 
-> **Note on lint debt (2026-07):** The repository currently carries ~262
-> pre-existing `ruff check` violations and a number of files needing
-> reformatting, inherited from earlier phases. A dedicated lint-cleanup task is
-> planned. Until that lands, the CI lint job runs `ruff check . --exit-zero`
-> and `ruff format --check . || true` so the gate is temporarily soft. The
-> expectation is that contributors do **not add new** lint errors: run
-> `ruff check .` and `ruff format --check .` locally and ensure your changes
-> introduce no new violations. Once the cleanup task lands, lint will become a
-> hard gate again.
+CI enforces all three as hard gates on every push and pull request: the `lint` job runs
+`ruff check .` and `ruff format --check .`, the `test` job runs the 3.10/3.11/3.12 matrix,
+and the `safety` job runs the raw-data-readonly / write-guard / boundary suites. Run them
+locally before opening a PR.
 
 ## Adding a tool
 
