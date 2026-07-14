@@ -2,7 +2,10 @@
 
 ## [Unreleased]
 
-_No changes yet._
+### Added
+- **MIT License**: added `LICENSE` (MIT) and declared it in `pyproject.toml`
+  (`license = "MIT"`) and the README. Real public Raman data remains under its own
+  CDLA-Sharing-1.0 data license; only the LabFlow Agent source code is MIT-licensed.
 
 ## [v0.4.0] - 2026-07-13
 
